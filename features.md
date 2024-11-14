@@ -343,3 +343,9 @@ Label 0: 6107634 (92.972%)
 Label 1: 119575 (1.820%)
 Label 2: 105950 (1.613%)
 Label 3: 236163 (3.595%)
+
+[<tf.Tensor: shape=(), dtype=int32, numpy=2537973>, <tf.Tensor: shape=(), dtype=int32, numpy=527883>]
+
+total 3 065 856
+attack 17,2%
+normal 82,7%

@@ -21,33 +21,28 @@ def parse_record(example_proto):
     label = parsed_features.pop('Label')
     label = 0 if label == 0 else 1
     features = tf.stack(list(parsed_features.values()))
-    #features = tf.reshape(features, (40,))
     return features, label
 
-def create_sequence_dataset(tfrecord_paths, sequence_length=64, sequence_shift=56, batch_size=32, return_sequences=True, shuffle=False):
-    raw_dataset = tf.data.TFRecordDataset(tfrecord_paths,
-    buffer_size=262144,
-    num_parallel_reads=tf.data.AUTOTUNE)
-    parsed_dataset = raw_dataset.map(parse_record)
+def sequence_has_attack(x, y):
+    return tf.math.not_equal(tf.reduce_max(y), 0)
 
+def create_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift = 56, batch_size = 32, filter_out_normal = True):
+    raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
+    parsed_dataset = raw_dataset.map(parse_record)
 
     features = parsed_dataset.map(lambda x, y: x)
     labels = parsed_dataset.map(lambda x, y: y)
 
-    feature_sequences = features.window(size=sequence_length, shift=sequence_shift, drop_remainder=True)
-    label_sequences = labels.window(size=sequence_length, shift=sequence_shift, drop_remainder=True)
+    feature_sequences = features.window(size=seq_length, shift=seq_shift, drop_remainder=True)
+    label_sequences = labels.window(size=seq_length, shift=seq_shift, drop_remainder=True)
 
-    feature_sequences = feature_sequences.flat_map(lambda x: x.batch(sequence_length))
-    label_sequences = label_sequences.flat_map(lambda x: x.batch(sequence_length))
-    
-    if return_sequences:
-        label_sequences = label_sequences.map(lambda y: tf.reshape(y, (sequence_length, )))
-    else:
-        label_sequences = label_sequences.map(lambda y: 0 if tf.reduce_max(y, axis=-1) == 0 else 1)
-        label_sequences = label_sequences.map(lambda y: tf.reshape(y, (1, )))
+    feature_sequences = feature_sequences.flat_map(lambda x: x.batch(seq_length))
+    label_sequences = label_sequences.flat_map(lambda x: x.batch(seq_length))
 
     sequence_dataset = tf.data.Dataset.zip((feature_sequences, label_sequences))
+    if filter_out_normal:
+        sequence_dataset = sequence_dataset.filter(sequence_has_attack)
+    sequence_dataset = sequence_dataset.shuffle(50000)
     sequence_dataset = sequence_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
-    if shuffle:
-        sequence_dataset = sequence_dataset.shuffle(1000)
+
     return sequence_dataset
