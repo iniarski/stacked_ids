@@ -21,12 +21,12 @@ def parse_record(example_proto):
     label = parsed_features.pop('Label')
     label = 0 if label == 0 else 1
     features = tf.stack(list(parsed_features.values()))
-    return features, label
+    return features, tf.reshape(label,(1,))
 
 def sequence_has_attack(x, y):
     return tf.math.not_equal(tf.reduce_max(y), 0)
 
-def create_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift = 56, batch_size = 32, filter_out_normal = True):
+def create_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift = 56, batch_size = 32, filter_out_normal = True, shuffle=True):
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
     parsed_dataset = raw_dataset.map(parse_record)
 
@@ -42,7 +42,8 @@ def create_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift = 56, 
     sequence_dataset = tf.data.Dataset.zip((feature_sequences, label_sequences))
     if filter_out_normal:
         sequence_dataset = sequence_dataset.filter(sequence_has_attack)
-    sequence_dataset = sequence_dataset.shuffle(50000)
+    if shuffle:
+        sequence_dataset = sequence_dataset.shuffle(100000)
     sequence_dataset = sequence_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     return sequence_dataset

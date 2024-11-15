@@ -1,39 +1,41 @@
 import tensorflow as tf
 import os
-
+import data_utils
+from tensorflow.keras.layers import Dense, TimeDistributed, Conv1D, Dropout, Reshape, Input, BatchNormalization, Flatten
+from tensorflow.keras.regularizers import L2
+import random
 
 model_path = 'saved_models/cnn1d.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
     save_best_only=True,
-    monitor='accuracy',
+    monitor='recall',
     mode='max',
     verbose=1
 )
 
-def CNN1D():
+def CNN1D_model(n_features = 40):
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
         return model
     else:
         model = tf.keras.models.Sequential([
-        tf.keras.layers.Reshape((40, 1)),
-        tf.keras.layers.Conv1D(128, 1, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Conv1D(64, 1, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Conv1D(32, 1, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(100, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(1, activation='sigmoid')
-        ])
+        Reshape((1, 40)),
+        Conv1D(128, 1, activation='relu', padding='same', strides=1),
+        Dropout(0.5),
+        Conv1D(64, 1, activation='relu', padding='same', strides=1),
+        Dropout(0.5),
+        Conv1D(32, 1, activation='relu', padding='same', strides=1),
+        Dropout(0.5),
+        Flatten(),
+        Dense(100, activation='relu', kernel_regularizer=L2(0.01)),
+        Dense(1, activation='sigmoid')
+      ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -7
+            learning_rate = 10 ** -7,   
         )
 
         model.compile(optimizer=optimizer,
@@ -42,3 +44,59 @@ def CNN1D():
                     )
 
         return model
+
+def main():
+    random.seed(42)
+
+    tfrecords_dir='data/AWID3_tfrecords'
+
+    tfrecords = [os.path.join(tfrecords_dir, file) for file in os.listdir(tfrecords_dir) if file.endswith('.tfrecord') and file.startswith('D')]
+    epochs = 15
+
+    random.shuffle(tfrecords)
+    test_ratio = 0.8
+    train_size = int(len(tfrecords) * test_ratio)
+    train_data = tfrecords[:train_size]
+    test_data = tfrecords[train_size:]
+
+
+    print("Training set:")
+    train_names = [t.split('/')[-1].split('.')[0] for t in train_data]
+    train_names.sort()
+    for t in train_names:
+        print(t)
+
+    print("\nTest set:")
+    test_names = [t.split('/')[-1].split('.')[0] for t in test_data]
+    test_names.sort()
+    for t in test_names:
+        print(t)
+
+    sequence_length = 64
+    sequence_shift = 56
+    batch_size = 200
+
+    import data_utils
+    raw_train_ds = tf.data.TFRecordDataset(train_data)
+    train_ds = raw_train_ds.map(data_utils.parse_record).shuffle(100000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    raw_test_ds = tf.data.TFRecordDataset(test_data)
+    test_ds = raw_train_ds.map(data_utils.parse_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    
+    class_weight = {
+        0 : 1 / 0.9 / 2.0,
+        1 : 1 / (1 - 0.9) / 2.0
+    }
+
+    model = CNN1D_model()
+    model.fit(train_ds,
+              epochs=epochs,
+              callbacks = [checkpoint_callback],
+              class_weight=class_weight)
+
+    model.summary()
+
+    model.evaluate(test_ds)
+
+if __name__ == '__main__':
+    main()
