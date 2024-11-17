@@ -4,17 +4,17 @@ import data_utils
 from tensorflow.keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropout, Reshape, Input, BatchNormalization
 import random
 
-model_path = 'saved_models/dnn.keras'
+model_path = 'saved_models/binary_dnn.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
     save_best_only=True,
-    monitor='f1_score',
+    monitor='recall',
     mode='max',
     verbose=1
 )
 
-def DNN_model():
+def binary_DNN_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
@@ -46,7 +46,7 @@ def DNN_model():
         )
 
         model.compile(optimizer=optimizer,
-                    loss='binary_focal_crossentropy',
+                    loss='binary_crossentropy',
                     metrics=['accuracy', 'precision', 'recall', 'f1_score']
                     )
 
@@ -54,56 +54,53 @@ def DNN_model():
 
 def main():
     random.seed(42)
-
-    tfrecords_dir='data/AWID3_tfrecords'
-
-    tfrecords = [os.path.join(tfrecords_dir, file) for file in os.listdir(tfrecords_dir) if file.endswith('.tfrecord')]
-    epochs = 15
-
-    random.shuffle(tfrecords)
-    test_ratio = 0.8
-    train_size = int(len(tfrecords) * test_ratio)
-    train_data = tfrecords[:train_size]
-    test_data = tfrecords[train_size:]
-
-
-    print("Training set:")
-    train_names = [t.split('/')[-1].split('.')[0] for t in train_data]
-    train_names.sort()
-    for t in train_names:
-        print(t)
-
-    print("\nTest set:")
-    test_names = [t.split('/')[-1].split('.')[0] for t in test_data]
-    test_names.sort()
-    for t in test_names:
-        print(t)
-
-    sequence_length = 64
-    sequence_shift = 56
-    batch_size = 200
-
     import data_utils
-    raw_train_ds = tf.data.TFRecordDataset(train_data)
-    train_ds = raw_train_ds.map(data_utils.parse_record).shuffle(100000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
-    raw_test_ds = tf.data.TFRecordDataset(test_data)
-    test_ds = raw_train_ds.map(data_utils.parse_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    data_utils.awid3_attacks = [
+    'Deauth',
+    'Disas',
+    '(Re)Assoc',
+    'RogueAP',
+    'Krack',
+    #'Kr00k',
+    'Evil_Twin'
+    ]
     
-    class_weight = {
-        0 : 1 / 0.92972 / 2.0,
-        1 : 1 / (1 - 0.92972) / 2.0
-    }
+    tfrecords_dir='dataset/AWID3_tfrecords_balanced'
+    train_ratio = 0.8
+    tfrecords_files = os.listdir(tfrecords_dir)
+    full_train_files, full_test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    model = DNN_model()
-    model.fit(train_ds,
-              epochs=epochs,
-              callbacks = [checkpoint_callback],
-              class_weight=class_weight)
+    epochs = 5
+    batch_size = 200
+    files_added = 5
+    
+    train_files = []
+    test_files = full_test_files
+    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
+    raw_test_ds = tf.data.TFRecordDataset(test_set)
+    test_ds = raw_test_ds.map(data_utils.parse_binary_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    
+    model = binary_DNN_model()
 
     model.summary()
-
-    model.evaluate(test_ds)
+    
+    while len(train_files) < len(full_train_files):
+        n_files = min(len(train_files) + files_added, len(full_train_files))
+        train_files = full_train_files[:n_files]
+        print(n_files, train_files)
+        files_added += 1
+        
+        train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
+        raw_train_ds = tf.data.TFRecordDataset(train_set)
+        train_ds = raw_train_ds.map(data_utils.parse_binary_record).shuffle(10000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        
+        model.fit(
+        train_ds,              
+        validation_data = test_ds,
+        epochs=epochs,
+        callbacks=[checkpoint_callback]
+        )
 
 if __name__ == '__main__':
     main()

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from collections import defaultdict
 
-directory_path = 'data/AWID3_preprocessed'
+directory_path = 'dataset/AWID3_preprocessed'
 
 files_with_non_zero_labels = [] 
 total_label_counts = defaultdict(int) 

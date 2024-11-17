@@ -1,5 +1,5 @@
-__pycache__
-data
-saved_models
-old
-.ipynb_checkpoints
+__pycache__/
+dataset/
+saved_models/
+old/
+.ipynb_checkpoints/

@@ -2,26 +2,30 @@
 
 | **Feature** | **Min** | **Max** |
 |----------|------------|---------------|
-| frame.len | 70 | 3977 |
+| frame.len | 70 | 3220 |
 | radiotap.length | 48 | 64 |
-| frame.time_delta | 0.0 | 3.323003 |
-| radiotap.dbm_antsignal | -259 | -24 |
-| wlan.duration | 0 | 22704 | 
+| frame.time_delta | 0.0 | 0.001817 |
+| radiotap.dbm_antsignal | -255 / 3 | -78 / 3 |
+| wlan.duration | 0 | 726 | 
+
+Any outliers outside of range calculated using IQR were clipped to range 0, 1
+
+In AWID3 3 values of radiotap.dbm.antsignal have been added, resulting in very low values of recieved signal power
+To compensate it they were divided by 3 resulting in a range that matches real word signal power 
 
 
 ### Categorical features
 
 | **Feature** | **No. Categories** | **Categories** | 
 |----------|------------|---------------|
-| radiotap.present.tsft | 2 |'0-0-0', '1-0-0'|
-| radiotap.channel.freq | 3 |  2417, 2472, 5180 |
 | wlan.fc.type | 3 | 0, 1, 2 |
 | wlan.fc.subtype | 16 | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 |
 | wlan.fc.ds | 4 | '0x00000000', '0x00000001', '0x00000002', '0x00000003' |
 
 ### Other features
-Binary features having values 0 an 1
+Mostly binary features having values 0 an 1
 
+* radiotap.present.tsft 
 * radiotap.channel.flags.cck,
 * radiotap.channel.flags.ofdm,
 * wlan.fc.frag,
@@ -29,6 +33,25 @@ Binary features having values 0 an 1
 * wlan.fc.pwrmgt,
 * wlan.fc.moredata,
 * wlan.fc.protected,
+* 2ghz_spectrum
+* 5ghz_spectrum
+* freq
+
+#### Head of a preporcessed csv file
+
+| frame.len__frame.len  | radiotap.length__radiotap.length | frame.time_delta__frame.time_delta | wlan.duration__wlan.duration | radiotap.dbm_antsignal__radiotap.dbm_antsignal | wlan.fc.type__wlan.fc.type_0 | wlan.fc.type__wlan.fc.type_1 | wlan.fc.type__wlan.fc.type_2 | wlan.fc.subtype__wlan.fc.subtype_0 | wlan.fc.subtype__wlan.fc.subtype_1 | wlan.fc.subtype__wlan.fc.subtype_2 | wlan.fc.subtype__wlan.fc.subtype_3 | wlan.fc.subtype__wlan.fc.subtype_4 | wlan.fc.subtype__wlan.fc.subtype_5 | wlan.fc.subtype__wlan.fc.subtype_6 | wlan.fc.subtype__wlan.fc.subtype_7 | wlan.fc.subtype__wlan.fc.subtype_8 | wlan.fc.subtype__wlan.fc.subtype_9 | wlan.fc.subtype__wlan.fc.subtype_10 | wlan.fc.subtype__wlan.fc.subtype_11 | wlan.fc.subtype__wlan.fc.subtype_12 | wlan.fc.subtype__wlan.fc.subtype_13 | wlan.fc.subtype__wlan.fc.subtype_14 | wlan.fc.subtype__wlan.fc.subtype_15 | wlan.fc.ds__wlan.fc.ds_0 | wlan.fc.ds__wlan.fc.ds_1 | wlan.fc.ds__wlan.fc.ds_2 | wlan.fc.ds__wlan.fc.ds_3 | bin__radiotap.present.tsft | bin__radiotap.channel.flags.cck | bin__radiotap.channel.flags.ofdm | bin__wlan.fc.frag | bin__wlan.fc.retry | bin__wlan.fc.pwrmgt | bin__wlan.fc.moredata | bin__wlan.fc.protected | bin__2ghz_spectrum | bin__5ghz_spectrum | bin__freq            | Label |
+|-----------------------|----------------------------------|------------------------------------|------------------------------|------------------------------------------------|------------------------------|------------------------------|------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|------------------------------------|-------------------------------------|-------------------------------------|-------------------------------------|-------------------------------------|-------------------------------------|-------------------------------------|--------------------------|--------------------------|--------------------------|--------------------------|----------------------------|---------------------------------|----------------------------------|-------------------|--------------------|---------------------|-----------------------|------------------------|--------------------|--------------------|----------------------|-------|
+|  0.005765534913516977 |              0.0 | 3.789170550566481e-05              |          0.0 |             0.3504273504273505 |          0.0 |          1.0 |          0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |1.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |      1.0 |      0.0 |      0.0 |      0.0 |        1.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    0.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+| 0.0019218449711723255 |              0.0 |              0.0014209389564624302 |          0.00854978354978355 |            0.22222222222222232 |          0.0 |          1.0 |          0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 | 0.0 | 1.0 | 0.0 | 0.0 | 0.0 | 0.0 |      1.0 |      0.0 |      0.0 |      0.0 |        1.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    0.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+|   0.0 |              0.0 |              0.0008525633738774583 |         0.005627705627705627 |             0.9572649572649572 |          0.0 |          1.0 |          0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 | 0.0 | 0.0 | 1.0 | 0.0 | 0.0 | 0.0 |      1.0 |      0.0 |      0.0 |      0.0 |        1.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    0.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+|  0.005765534913516977 |              0.0 |              0.0023492857413512183 |         0.003354978354978355 |             0.9487179487179486 |          0.0 |          1.0 |          0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |1.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |      1.0 |      0.0 |      0.0 |      0.0 |        1.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    0.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+| 0.0019218449711723255 |              0.0 |              0.0026903110909022015 |         0.008982683982683983 |            0.36752136752136755 |          0.0 |          1.0 |          0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 | 0.0 | 1.0 | 0.0 | 0.0 | 0.0 | 0.0 |      1.0 |      0.0 |      0.0 |      0.0 |        1.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    0.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+|   0.0 |              0.0 |              0.0007388882573604638 |         0.006060606060606061 |             0.9487179487179486 |          0.0 |          1.0 |          0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 | 0.0 | 0.0 | 1.0 | 0.0 | 0.0 | 0.0 |      1.0 |      0.0 |      0.0 |      0.0 |        1.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    0.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+|  0.028187059577194102 |              1.0 |               0.001364101398203933 |         0.005952380952380952 |            0.41880341880341865 |          0.0 |          0.0 |          1.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |1.0 |0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |      0.0 |      1.0 |      0.0 |      0.0 |        0.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    1.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+|  0.028187059577194102 |              1.0 | 3.789170550566481e-05              |         0.005952380952380952 |            0.41880341880341865 |          0.0 |          0.0 |          1.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |1.0 |0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |      0.0 |      1.0 |      0.0 |      0.0 |        0.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    1.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+|  0.028187059577194102 |              1.0 | 1.8945852752832404e-05             |         0.005952380952380952 |            0.41880341880341865 |          0.0 |          0.0 |          1.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |1.0 |0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |      0.0 |      1.0 |      0.0 |      0.0 |        0.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    1.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
+
+### Distribution of attack samples in files
 
 | File          | Normal Count | Normal (%) | Anomalous Count | Anomalous (%) |
 |---------------|--------------|------------|-----------------|---------------|
@@ -81,262 +104,92 @@ Binary features having values 0 an 1
 | Kr00k_32      | 48,862       | 97.724%    | 1,138           | 2.276%        |
 | Kr00k_33      | 48,559       | 97.118%    | 1,441           | 2.882%        |
 | Kr00k_34      | 46,584       | 93.168%    | 3,416           | 6.832%        |
-| Kr00k_35      | 44,370       | 100.000%   | 0               | 0.000%        |
+| Kr00k_35      | 44,370       | 88,74%     | 5,630           | 11,26%        |
 | Kr00k_36      | 42,016       | 84.035%    | 7,982           | 15.965%       |
-| ...           | ...          | ...        | ...             | ...           |
+| Kr00k_37      | 39,574       | 79.148%    | 10,426          | 20.852%       |
+| Kr00k_38      | 40,001       | 80.002%    | 9,999           | 19.998%       |
+| Kr00k_39      | 39,193       | 78.386%    | 10,807          | 21.614%       |
+| Kr00k_40      | 38,575       | 77.150%    | 11,425          | 22.850%       |
+| Kr00k_41      | 40,472       | 80.944%    | 9,528           | 19.056%       |
+| Kr00k_42      | 40,166       | 80.332%    | 9,834           | 19.668%       |
+| Kr00k_43      | 40,587       | 81.174%    | 9,413           | 18.826%       |
+| Kr00k_44      | 42,131       | 84.262%    | 7,869           | 15.738%       |
+| Kr00k_45      | 45,159       | 90.318%    | 4,841           | 9.682%        |
+| Kr00k_46      | 45,977       | 91.958%    | 4,021           | 8.042%        |
+| Kr00k_47      | 41,801       | 83.602%    | 8,199           | 16.398%       |
+| Kr00k_48      | 41,822       | 83.644%    | 8,178           | 16.356%       |
+| Kr00k_49      | 41,746       | 83.492%    | 8,254           | 16.508%       |
+| Kr00k_50      | 43,478       | 86.959%    | 6,520           | 13.041%       |
+| Kr00k_51      | 39,452       | 78.904%    | 10,548          | 21.096%       |
+| Kr00k_52      | 42,771       | 85.544%    | 7,228           | 14.456%       |
+| Kr00k_53      | 46,338       | 92.676%    | 3,662           | 7.324%        |
+| Kr00k_54      | 39,664       | 79.328%    | 10,336          | 20.672%       |
+| Kr00k_55      | 41,233       | 82.466%    | 8,767           | 17.534%       |
+| Kr00k_56      | 44,743       | 89.486%    | 5,257           | 10.514%       |
+| Kr00k_57      | 46,082       | 92.166%    | 3,917           | 7.834%        ||               |
+| Evil_Twin_29  | 49,835       | 99.670%    | 165             | 0.330%        |
+| Evil_Twin_30  | 49,834       | 99.670%    | 165             | 0.330%        |
+| Evil_Twin_31  | 49,653       | 99.306%    | 347             | 0.694%        |
+| Evil_Twin_32  | 49,924       | 99.848%    | 76              | 0.152%        |
+| Evil_Twin_33  | 49,920       | 99.840%    | 80              | 0.160%        |
+| Evil_Twin_34  | 49,590       | 99.180%    | 410             | 0.820%        |
+| Evil_Twin_35  | 39,194       | 78.388%    | 10,806          | 21.612%       |
+| Evil_Twin_36  | 43,416       | 86.832%    | 6,584           | 13.168%       |
+| Evil_Twin_37  | 45,934       | 91.868%    | 4,066           | 8.132%        |
+| Evil_Twin_38  | 49,619       | 99.240%    | 380             | 0.760%        |
+| Evil_Twin_39  | 46,681       | 93.366%    | 3,317           | 6.634%        |
+| Evil_Twin_40  | 43,857       | 87.714%    | 6,143           | 12.286%       |
+| Evil_Twin_41  | 41,010       | 82.020%    | 8,990           | 17.980%       |
+| Evil_Twin_42  | 27,799       | 55.598%    | 22,201          | 44.402%       |
+| Evil_Twin_43  | 40,121       | 80.242%    | 9,879           | 19.758%       |
+| Evil_Twin_44  | 49,862       | 99.724%    | 138             | 0.276%        |
+| Evil_Twin_45  | 49,917       | 99.834%    | 83              | 0.166%        |
+| Evil_Twin_46  | 43,996       | 87.994%    | 6,003           | 12.006%       |
+| Evil_Twin_47  | 47,706       | 95.412%    | 2,294           | 4.588%        |
+| Evil_Twin_48  | 49,884       | 99.772%    | 114             | 0.228%        |
+| Evil_Twin_49  | 49,773       | 99.546%    | 227             | 0.454%        |
+| Evil_Twin_50  | 40,146       | 80.292%    | 9,854           | 19.708%       |
+| Evil_Twin_51  | 49,868       | 99.736%    | 132             | 0.264%        |
+| Evil_Twin_52  | 49,917       | 99.834%    | 83              | 0.166%        |
+| Evil_Twin_53  | 40,074       | 80.148%    | 9,926           | 19.852%       |
+| Evil_Twin_54  | 49,878       | 99.756%    | 122             | 0.244%        |
+| Evil_Twin_55  | 49,868       | 99.736%    | 132             | 0.264%        |
+| Evil_Twin_56  | 49,849       | 99.710%    | 145             | 0.290%        |
+| Evil_Twin_57  | 49,963       | 99.932%    | 34              | 0.068%        |
+| Evil_Twin_58  | 49,997       | 99.996%    | 2               | 0.004%        |
+| Evil_Twin_59  | 49,889       | 99.780%    | 110             | 0.220%        |
+| Evil_Twin_60  | 49,836       | 99.672%    | 164             | 0.328%        |
+| Evil_Twin_61  | 49,906       | 99.816%    | 92              | 0.184%        |
+| Evil_Twin_62  | 49,956       | 99.912%    | 44              | 0.088%        |
+| Evil_Twin_63  | 49,921       | 99.842%    | 79              | 0.158%        |
+| Evil_Twin_64  | 49,937       | 99.876%    | 62              | 0.124%        |
+| Evil_Twin_65  | 49,950       | 99.902%    | 49              | 0.098%        |
+| Evil_Twin_66  | 49,890       | 99.784%    | 108             | 0.216%        |
+| Evil_Twin_67  | 49,836       | 99.672%    | 164             | 0.328%        |
+| Evil_Twin_68  | 49,936       | 99.874%    | 63              | 0.126%        |
+| Evil_Twin_69   | 49,894       | 99.788%    | 106           | 0.212%        |
+| Evil_Twin_70   | 49,841       | 99.682%    | 159           | 0.318%        |
+| Evil_Twin_71   | 49,803       | 99.608%    | 196           | 0.392%        |
+| Evil_Twin_72   | 49,904       | 99.808%    | 96            | 0.192%        |
+| Evil_Twin_73   | 49,897       | 99.798%    | 101           | 0.202%        |
+| Evil_Twin_74   | 49,901       | 99.802%    | 99            | 0.198%        |
+| Evil_Twin_75   | 28,677       | 99.822%    | 51            | 0.178%        |
+| (Re)Assoc_22   | 49,972       | 99.944%    | 28            | 0.056%        |
+| (Re)Assoc_23   | 49,617       | 99.240%    | 380           | 0.760%        |
+| (Re)Assoc_24   | 49,241       | 98.482%    | 759           | 1.518%        |
+| (Re)Assoc_25   | 49,499       | 98.998%    | 501           | 1.002%        |
+| (Re)Assoc_26   | 49,648       | 99.298%    | 351           | 0.702%        |
+| (Re)Assoc_27   | 49,630       | 99.260%    | 370           | 0.740%        |
+| (Re)Assoc_28   | 49,561       | 99.122%    | 439           | 0.878%        |
+| (Re)Assoc_29   | 49,451       | 98.906%    | 547           | 1.094%        |
+| (Re)Assoc_30   | 49,672       | 99.344%    | 328           | 0.656%        |
+| (Re)Assoc_31   | 49,647       | 99.294%    | 353           | 0.706%        |
+| (Re)Assoc_32   | 49,780       | 99.560%    | 220           | 0.440%        |
+| (Re)Assoc_33   | 49,646       | 99.292%    | 354           | 0.708%        |
+| (Re)Assoc_34   | 49,611       | 99.222%    | 389           | 0.778%        |
+| (Re)Assoc_35   | 49,692       | 99.384%    | 308           | 0.616%        |
+| (Re)Assoc_36   | 43,764       | 99.602%    | 175           | 0.398%        |
 
-
-data/AWID3_preprocessed/Kr00k_37.csv
-Label 0: 39574 (79.148%)
-Label 3: 10426 (20.852%)
-data/AWID3_preprocessed/Kr00k_38.csv
-Label 0: 40001 (80.002%)
-Label 3: 9999 (19.998%)
-data/AWID3_preprocessed/Kr00k_39.csv
-Label 0: 39193 (78.386%)
-Label 3: 10807 (21.614%)
-data/AWID3_preprocessed/Kr00k_40.csv
-Label 0: 38575 (77.150%)
-Label 3: 11425 (22.850%)
-data/AWID3_preprocessed/Kr00k_41.csv
-Label 0: 40472 (80.944%)
-Label 3: 9528 (19.056%)
-data/AWID3_preprocessed/Kr00k_42.csv
-Label 0: 40166 (80.332%)
-Label 3: 9834 (19.668%)
-data/AWID3_preprocessed/Kr00k_43.csv
-Label 0: 40587 (81.174%)
-Label 3: 9413 (18.826%)
-data/AWID3_preprocessed/Kr00k_44.csv
-Label 0: 42131 (84.262%)
-Label 3: 7869 (15.738%)
-data/AWID3_preprocessed/Kr00k_45.csv
-Label 0: 45159 (90.318%)
-Label 3: 4841 (9.682%)
-data/AWID3_preprocessed/Kr00k_46.csv
-Label 0: 45977 (91.958%)
-Label 3: 4021 (8.042%)
-data/AWID3_preprocessed/Kr00k_47.csv
-Label 0: 41801 (83.602%)
-Label 3: 8199 (16.398%)
-data/AWID3_preprocessed/Kr00k_48.csv
-Label 0: 41822 (83.644%)
-Label 3: 8178 (16.356%)
-data/AWID3_preprocessed/Kr00k_49.csv
-Label 0: 41746 (83.492%)
-Label 3: 8254 (16.508%)
-data/AWID3_preprocessed/Kr00k_50.csv
-Label 0: 43478 (86.959%)
-Label 3: 6520 (13.041%)
-data/AWID3_preprocessed/Kr00k_51.csv
-Label 0: 39452 (78.904%)
-Label 3: 10548 (21.096%)
-data/AWID3_preprocessed/Kr00k_52.csv
-Label 0: 42771 (85.544%)
-Label 3: 7228 (14.456%)
-data/AWID3_preprocessed/Kr00k_53.csv
-Label 0: 46338 (92.676%)
-Label 3: 3662 (7.324%)
-data/AWID3_preprocessed/Kr00k_54.csv
-Label 0: 39664 (79.328%)
-Label 3: 10336 (20.672%)
-data/AWID3_preprocessed/Kr00k_55.csv
-Label 0: 41233 (82.466%)
-Label 3: 8767 (17.534%)
-data/AWID3_preprocessed/Kr00k_56.csv
-Label 0: 44743 (89.486%)
-Label 3: 5257 (10.514%)
-data/AWID3_preprocessed/Kr00k_57.csv
-Label 0: 46082 (92.166%)
-Label 3: 3917 (7.834%)
-data/AWID3_preprocessed/Kr00k_58.csv
-Label 0: 458 (100.000%)
-data/AWID3_preprocessed/Evil_Twin_29.csv
-Label 0: 49835 (99.670%)
-Label 2: 165 (0.330%)
-data/AWID3_preprocessed/Evil_Twin_30.csv
-Label 0: 49834 (99.670%)
-Label 2: 165 (0.330%)
-data/AWID3_preprocessed/Evil_Twin_31.csv
-Label 0: 49653 (99.306%)
-Label 2: 347 (0.694%)
-data/AWID3_preprocessed/Evil_Twin_32.csv
-Label 0: 49924 (99.848%)
-Label 2: 76 (0.152%)
-data/AWID3_preprocessed/Evil_Twin_33.csv
-Label 0: 49920 (99.840%)
-Label 2: 80 (0.160%)
-data/AWID3_preprocessed/Evil_Twin_34.csv
-Label 0: 49590 (99.180%)
-Label 2: 410 (0.820%)
-data/AWID3_preprocessed/Evil_Twin_35.csv
-Label 0: 39194 (78.388%)
-Label 2: 10806 (21.612%)
-data/AWID3_preprocessed/Evil_Twin_36.csv
-Label 0: 43416 (86.832%)
-Label 2: 6584 (13.168%)
-data/AWID3_preprocessed/Evil_Twin_37.csv
-Label 0: 45934 (91.868%)
-Label 2: 4066 (8.132%)
-data/AWID3_preprocessed/Evil_Twin_38.csv
-Label 0: 49619 (99.240%)
-Label 2: 380 (0.760%)
-data/AWID3_preprocessed/Evil_Twin_39.csv
-Label 0: 46681 (93.366%)
-Label 2: 3317 (6.634%)
-data/AWID3_preprocessed/Evil_Twin_40.csv
-Label 0: 43857 (87.714%)
-Label 2: 6143 (12.286%)
-data/AWID3_preprocessed/Evil_Twin_41.csv
-Label 0: 41010 (82.020%)
-Label 2: 8990 (17.980%)
-data/AWID3_preprocessed/Evil_Twin_42.csv
-Label 0: 27799 (55.598%)
-Label 2: 22201 (44.402%)
-data/AWID3_preprocessed/Evil_Twin_43.csv
-Label 0: 40121 (80.242%)
-Label 2: 9879 (19.758%)
-data/AWID3_preprocessed/Evil_Twin_44.csv
-Label 0: 49862 (99.724%)
-Label 2: 138 (0.276%)
-data/AWID3_preprocessed/Evil_Twin_45.csv
-Label 0: 49917 (99.834%)
-Label 2: 83 (0.166%)
-data/AWID3_preprocessed/Evil_Twin_46.csv
-Label 0: 43996 (87.994%)
-Label 2: 6003 (12.006%)
-data/AWID3_preprocessed/Evil_Twin_47.csv
-Label 0: 47706 (95.412%)
-Label 2: 2294 (4.588%)
-data/AWID3_preprocessed/Evil_Twin_48.csv
-Label 0: 49884 (99.772%)
-Label 2: 114 (0.228%)
-data/AWID3_preprocessed/Evil_Twin_49.csv
-Label 0: 49773 (99.546%)
-Label 2: 227 (0.454%)
-data/AWID3_preprocessed/Evil_Twin_50.csv
-Label 0: 40146 (80.292%)
-Label 2: 9854 (19.708%)
-data/AWID3_preprocessed/Evil_Twin_51.csv
-Label 0: 49868 (99.736%)
-Label 2: 132 (0.264%)
-data/AWID3_preprocessed/Evil_Twin_52.csv
-Label 0: 49917 (99.834%)
-Label 2: 83 (0.166%)
-data/AWID3_preprocessed/Evil_Twin_53.csv
-Label 0: 40074 (80.148%)
-Label 2: 9926 (19.852%)
-data/AWID3_preprocessed/Evil_Twin_54.csv
-Label 0: 49878 (99.756%)
-Label 2: 122 (0.244%)
-data/AWID3_preprocessed/Evil_Twin_55.csv
-Label 0: 49868 (99.736%)
-Label 2: 132 (0.264%)
-data/AWID3_preprocessed/Evil_Twin_56.csv
-Label 0: 49849 (99.710%)
-Label 2: 145 (0.290%)
-data/AWID3_preprocessed/Evil_Twin_57.csv
-Label 0: 49963 (99.932%)
-Label 2: 34 (0.068%)
-data/AWID3_preprocessed/Evil_Twin_58.csv
-Label 0: 49997 (99.996%)
-Label 2: 2 (0.004%)
-data/AWID3_preprocessed/Evil_Twin_59.csv
-Label 0: 49889 (99.780%)
-Label 2: 110 (0.220%)
-data/AWID3_preprocessed/Evil_Twin_60.csv
-Label 0: 49836 (99.672%)
-Label 2: 164 (0.328%)
-data/AWID3_preprocessed/Evil_Twin_61.csv
-Label 0: 49906 (99.816%)
-Label 2: 92 (0.184%)
-data/AWID3_preprocessed/Evil_Twin_62.csv
-Label 0: 49956 (99.912%)
-Label 2: 44 (0.088%)
-data/AWID3_preprocessed/Evil_Twin_63.csv
-Label 0: 49921 (99.842%)
-Label 2: 79 (0.158%)
-data/AWID3_preprocessed/Evil_Twin_64.csv
-Label 0: 49937 (99.876%)
-Label 2: 62 (0.124%)
-data/AWID3_preprocessed/Evil_Twin_65.csv
-Label 0: 49950 (99.902%)
-Label 2: 49 (0.098%)
-data/AWID3_preprocessed/Evil_Twin_66.csv
-Label 0: 49890 (99.784%)
-Label 2: 108 (0.216%)
-data/AWID3_preprocessed/Evil_Twin_67.csv
-Label 0: 49836 (99.672%)
-Label 2: 164 (0.328%)
-data/AWID3_preprocessed/Evil_Twin_68.csv
-Label 0: 49936 (99.874%)
-Label 2: 63 (0.126%)
-data/AWID3_preprocessed/Evil_Twin_69.csv
-Label 0: 49894 (99.788%)
-Label 2: 106 (0.212%)
-data/AWID3_preprocessed/Evil_Twin_70.csv
-Label 0: 49841 (99.682%)
-Label 2: 159 (0.318%)
-data/AWID3_preprocessed/Evil_Twin_71.csv
-Label 0: 49803 (99.608%)
-Label 2: 196 (0.392%)
-data/AWID3_preprocessed/Evil_Twin_72.csv
-Label 0: 49904 (99.808%)
-Label 2: 96 (0.192%)
-data/AWID3_preprocessed/Evil_Twin_73.csv
-Label 0: 49897 (99.798%)
-Label 2: 101 (0.202%)
-data/AWID3_preprocessed/Evil_Twin_74.csv
-Label 0: 49901 (99.802%)
-Label 2: 99 (0.198%)
-data/AWID3_preprocessed/Evil_Twin_75.csv
-Label 0: 28677 (99.822%)
-Label 2: 51 (0.178%)
-data/AWID3_preprocessed/(Re)Assoc_22.csv
-Label 0: 49972 (99.944%)
-Label 1: 28 (0.056%)
-data/AWID3_preprocessed/(Re)Assoc_23.csv
-Label 0: 49617 (99.240%)
-Label 1: 380 (0.760%)
-data/AWID3_preprocessed/(Re)Assoc_24.csv
-Label 0: 49241 (98.482%)
-Label 1: 759 (1.518%)
-data/AWID3_preprocessed/(Re)Assoc_25.csv
-Label 0: 49499 (98.998%)
-Label 1: 501 (1.002%)
-data/AWID3_preprocessed/(Re)Assoc_26.csv
-Label 0: 49648 (99.298%)
-Label 1: 351 (0.702%)
-data/AWID3_preprocessed/(Re)Assoc_27.csv
-Label 0: 49630 (99.260%)
-Label 1: 370 (0.740%)
-data/AWID3_preprocessed/(Re)Assoc_28.csv
-Label 0: 49561 (99.122%)
-Label 1: 439 (0.878%)
-data/AWID3_preprocessed/(Re)Assoc_29.csv
-Label 0: 49451 (98.906%)
-Label 1: 547 (1.094%)
-data/AWID3_preprocessed/(Re)Assoc_30.csv
-Label 0: 49672 (99.344%)
-Label 1: 328 (0.656%)
-data/AWID3_preprocessed/(Re)Assoc_31.csv
-Label 0: 49647 (99.294%)
-Label 1: 353 (0.706%)
-data/AWID3_preprocessed/(Re)Assoc_32.csv
-Label 0: 49780 (99.560%)
-Label 1: 220 (0.440%)
-data/AWID3_preprocessed/(Re)Assoc_33.csv
-Label 0: 49646 (99.292%)
-Label 1: 354 (0.708%)
-data/AWID3_preprocessed/(Re)Assoc_34.csv
-Label 0: 49611 (99.222%)
-Label 1: 389 (0.778%)
-data/AWID3_preprocessed/(Re)Assoc_35.csv
-Label 0: 49692 (99.384%)
-Label 1: 308 (0.616%)
-data/AWID3_preprocessed/(Re)Assoc_36.csv
-Label 0: 43764 (99.602%)
-Label 1: 175 (0.398%)
 
 Total count of labels across all files (by label):
 Label 0: 6107634 (92.972%)
@@ -349,3 +202,142 @@ Label 3: 236163 (3.595%)
 total 3 065 856
 attack 17,2%
 normal 82,7%
+
+#### Balanced dataset
+
+| **File** | **Normal class** | **Normal samples** | **Attack class** | **Attack samples** |
+|-----|-----|-----|-----|-----|
+| Deauth_21 | 0 | 885 | 1 | 885 |
+| Deauth_22 | 0 | 5201 | 1 | 5201 |
+| Deauth_23 | 0 | 3616 | 1 | 3616 |
+| Deauth_24 | 0 | 909 | 1 | 909 |
+| Deauth_25 | 0 | 2567 | 1 | 2567 |
+| Deauth_26 | 0 | 2083 | 1 | 2083 |
+| Deauth_27 | 0 | 2924 | 1 | 2924 |
+| Deauth_28 | 0 | 2732 | 1 | 2732 |
+| Deauth_29 | 0 | 3336 | 1 | 3336 |
+| Deauth_30 | 0 | 8940 | 1 | 8940 |
+| Deauth_31 | 0 | 4738 | 1 | 4738 |
+| Deauth_32 | 0 | 1011 | 1 | 1011 |
+| Disas_28 | 0 | 2119 | 1 | 2119 |
+| Disas_29 | 0 | 2238 | 1 | 2238 |
+| Disas_30 | 0 | 3622 | 1 | 3622 |
+| Disas_31 | 0 | 6160 | 1 | 6160 |
+| Disas_32 | 0 | 793 | 1 | 793 |
+| Disas_33 | 0 | 6583 | 1 | 6583 |
+| Disas_34 | 0 | 10846 | 1 | 10846 |
+| Disas_35 | 0 | 7200 | 1 | 7200 |
+| Disas_36 | 0 | 8702 | 1 | 8702 |
+| Disas_37 | 0 | 9629 | 1 | 9629 |
+| Disas_38 | 0 | 9258 | 1 | 9258 |
+| Disas_39 | 0 | 7073 | 1 | 7073 |
+| Disas_40 | 0 | 908 | 1 | 908 |
+| (Re)Assoc_22 | 0 | 28 | 1 | 28 |
+| (Re)Assoc_23 | 0 | 380 | 1 | 380 |
+| (Re)Assoc_24 | 0 | 759 | 1 | 759 |
+| (Re)Assoc_25 | 0 | 501 | 1 | 501 |
+| (Re)Assoc_26 | 0 | 351 | 1 | 351 |
+| (Re)Assoc_27 | 0 | 370 | 1 | 370 |
+| (Re)Assoc_28 | 0 | 439 | 1 | 439 |
+| (Re)Assoc_29 | 0 | 547 | 1 | 547 |
+| (Re)Assoc_30 | 0 | 328 | 1 | 328 |
+| (Re)Assoc_31 | 0 | 353 | 1 | 353 |
+| (Re)Assoc_32 | 0 | 220 | 1 | 220 |
+| (Re)Assoc_33 | 0 | 354 | 1 | 354 |
+| (Re)Assoc_34 | 0 | 389 | 1 | 389 |
+| (Re)Assoc_35 | 0 | 308 | 1 | 308 |
+| (Re)Assoc_36 | 0 | 175 | 1 | 175 |
+| RogueAP_24 | 0 | 28 | 2 | 28 |
+| RogueAP_25 | 0 | 83 | 2 | 83 |
+| RogueAP_26 | 0 | 79 | 2 | 79 |
+| RogueAP_27 | 0 | 71 | 2 | 71 |
+| RogueAP_28 | 0 | 85 | 2 | 85 |
+| RogueAP_29 | 0 | 166 | 2 | 166 |
+| RogueAP_30 | 0 | 57 | 2 | 57 |
+| RogueAP_31 | 0 | 61 | 2 | 61 |
+| RogueAP_32 | 0 | 64 | 2 | 64 |
+| RogueAP_33 | 0 | 68 | 2 | 68 |
+| RogueAP_34 | 0 | 91 | 2 | 91 |
+| RogueAP_35 | 0 | 143 | 2 | 143 |
+| RogueAP_36 | 0 | 67 | 2 | 67 |
+| RogueAP_37 | 0 | 105 | 2 | 105 |
+| RogueAP_38 | 0 | 117 | 2 | 117 |
+| RogueAP_39 | 0 | 24 | 2 | 24 |
+| Krack_25 | 0 | 12312 | 2 | 12312 |
+| Krack_26 | 0 | 16342 | 2 | 16342 |
+| Krack_27 | 0 | 16009 | 2 | 16009 |
+| Krack_28 | 0 | 5327 | 2 | 5327 |
+| Kr00k_31 | 0 | 3167 | 1 | 3167 |
+| Kr00k_32 | 0 | 1138 | 1 | 1138 |
+| Kr00k_33 | 0 | 1441 | 1 | 1441 |
+| Kr00k_34 | 0 | 3416 | 1 | 3416 |
+| Kr00k_35 | 0 | 5630 | 1 | 5630 |
+| Kr00k_36 | 0 | 7982 | 1 | 7982 |
+| Kr00k_37 | 0 | 10426 | 1 | 10426 |
+| Kr00k_38 | 0 | 9999 | 1 | 9999 |
+| Kr00k_39 | 0 | 10807 | 1 | 10807 |
+| Kr00k_40 | 0 | 11425 | 1 | 11425 |
+| Kr00k_41 | 0 | 9528 | 1 | 9528 |
+| Kr00k_42 | 0 | 9834 | 1 | 9834 |
+| Kr00k_43 | 0 | 9413 | 1 | 9413 |
+| Kr00k_44 | 0 | 7869 | 1 | 7869 |
+| Kr00k_45 | 0 | 4841 | 1 | 4841 |
+| Kr00k_46 | 0 | 4021 | 1 | 4021 |
+| Kr00k_47 | 0 | 8199 | 1 | 8199 |
+| Kr00k_48 | 0 | 8178 | 1 | 8178 |
+| Kr00k_49 | 0 | 8254 | 1 | 8254 |
+| Kr00k_50 | 0 | 6520 | 1 | 6520 |
+| Kr00k_51 | 0 | 10548 | 1 | 10548 |
+| Kr00k_52 | 0 | 7228 | 1 | 7228 |
+| Kr00k_53 | 0 | 3662 | 1 | 3662 |
+| Kr00k_54 | 0 | 10336 | 1 | 10336 |
+| Kr00k_55 | 0 | 8767 | 1 | 8767 |
+| Kr00k_56 | 0 | 5257 | 1 | 5257 |
+| Kr00k_57 | 0 | 3917 | 1 | 3917 |
+| Evil_Twin_29 | 0 | 165 | 2 | 165 |
+| Evil_Twin_30 | 0 | 165 | 2 | 165 |
+| Evil_Twin_31 | 0 | 347 | 2 | 347 |
+| Evil_Twin_32 | 0 | 76 | 2 | 76 |
+| Evil_Twin_33 | 0 | 80 | 2 | 80 |
+| Evil_Twin_34 | 0 | 410 | 2 | 410 |
+| Evil_Twin_35 | 0 | 10806 | 2 | 10806 |
+| Evil_Twin_36 | 0 | 6584 | 2 | 6584 |
+| Evil_Twin_37 | 0 | 4066 | 2 | 4066 |
+| Evil_Twin_38 | 0 | 380 | 2 | 380 |
+| Evil_Twin_39 | 0 | 3317 | 2 | 3317 |
+| Evil_Twin_40 | 0 | 6143 | 2 | 6143 |
+| Evil_Twin_41 | 0 | 8990 | 2 | 8990 |
+| Evil_Twin_42 | 0 | 22201 | 2 | 22201 |
+| Evil_Twin_43 | 0 | 9879 | 2 | 9879 |
+| Evil_Twin_44 | 0 | 138 | 2 | 138 |
+| Evil_Twin_45 | 0 | 83 | 2 | 83 |
+| Evil_Twin_46 | 0 | 6003 | 2 | 6003 |
+| Evil_Twin_47 | 0 | 2294 | 2 | 2294 |
+| Evil_Twin_48 | 0 | 114 | 2 | 114 |
+| Evil_Twin_49 | 0 | 227 | 2 | 227 |
+| Evil_Twin_50 | 0 | 9854 | 2 | 9854 |
+| Evil_Twin_51 | 0 | 132 | 2 | 132 |
+| Evil_Twin_52 | 0 | 83 | 2 | 83 |
+| Evil_Twin_53 | 0 | 9926 | 2 | 9926 |
+| Evil_Twin_54 | 0 | 122 | 2 | 122 |
+| Evil_Twin_55 | 0 | 132 | 2 | 132 |
+| Evil_Twin_56 | 0 | 145 | 2 | 145 |
+| Evil_Twin_57 | 0 | 34 | 2 | 34 |
+| Evil_Twin_58 | 0 | 2 | 2 | 2 |
+| Evil_Twin_59 | 0 | 110 | 2 | 110 |
+| Evil_Twin_60 | 0 | 164 | 2 | 164 |
+| Evil_Twin_61 | 0 | 92 | 2 | 92 |
+| Evil_Twin_62 | 0 | 44 | 2 | 44 |
+| Evil_Twin_63 | 0 | 79 | 2 | 79 |
+| Evil_Twin_64 | 0 | 62 | 2 | 62 |
+| Evil_Twin_65 | 0 | 49 | 2 | 49 |
+| Evil_Twin_66 | 0 | 108 | 2 | 108 |
+| Evil_Twin_67 | 0 | 164 | 2 | 164 |
+| Evil_Twin_68 | 0 | 63 | 2 | 63 |
+| Evil_Twin_69 | 0 | 106 | 2 | 106 |
+| Evil_Twin_70 | 0 | 159 | 2 | 159 |
+| Evil_Twin_71 | 0 | 196 | 2 | 196 |
+| Evil_Twin_72 | 0 | 96 | 2 | 96 |
+| Evil_Twin_73 | 0 | 101 | 2 | 101 |
+| Evil_Twin_74 | 0 | 99 | 2 | 99 |
+| Evil_Twin_75 | 0 | 51 | 2 | 51 |

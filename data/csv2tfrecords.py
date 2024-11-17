@@ -6,9 +6,10 @@ from concurrent.futures import ProcessPoolExecutor
 
 tf.config.experimental.set_visible_devices([], 'GPU')
 
-csv_dir = 'data/AWID3_preprocessed'
-tfrecord_dir = 'data/AWID3_tfrecords'
+csv_dir = 'dataset/AWID3_CSV_preprocessed'
+tfrecord_dir = 'dataset/AWID3_tfrecords'
 os.makedirs(tfrecord_dir, exist_ok=True)
+column_names = []
 
 def create_example(row, column_names):
     feature = {
@@ -17,17 +18,20 @@ def create_example(row, column_names):
     }
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
+def parse_column_name(c):
+    c = str(c).split("__")[-1]
+    if c.endswith('.0'):
+        return c[:-2]
+    return c
+
 def convert_csv_to_tfrecord(csv_file, tfrecord_file):
     df = pd.read_csv(csv_file)
-    column_names = list(map(lambda c : str(c).split("__")[-1], df.columns))
+    column_names = list(map(parse_column_name, df.columns))
     print(csv_file, column_names)
     
     dataset = tf.data.Dataset.from_tensor_slices(df.values)
-    
-    # Open TFRecord writer
     with tf.io.TFRecordWriter(tfrecord_file) as writer:
-        # Use `map` to convert each batch of rows to TFRecord Examples and write them
-        for batch in dataset.batch(1024):  # Adjust batch size as needed
+        for batch in dataset.batch(1024):
             for row in batch.numpy():
                 example = create_example(row, column_names)
                 writer.write(example.SerializeToString())
@@ -35,8 +39,22 @@ def convert_csv_to_tfrecord(csv_file, tfrecord_file):
 def process_file(file):
     if file.endswith('.csv'):
         csv_path = os.path.join(csv_dir, file)
-        tfrecord_path = os.path.join(tfrecord_dir, f"{os.path.splitext(file)[0]}.tfrecord")
+        tfrecord_path = os.path.join(tfrecord_dir, f"{os.path.splitext(file)[0]}.tfrecords")
+        if os.path.exists(tfrecord_path):
+            return
         convert_csv_to_tfrecord(csv_path, tfrecord_path)
 
+
+#for file in os.listdir(csv_dir):
+#    process_file(file)
 with ProcessPoolExecutor() as executor:
     executor.map(process_file, os.listdir(csv_dir))
+
+csv_dir = 'dataset/AWID3_CSV_balanced'
+tfrecord_dir = 'dataset/AWID3_tfrecords_balanced'
+
+with ProcessPoolExecutor() as executor:
+   executor.map(process_file, os.listdir(csv_dir))
+
+#for file in os.listdir(csv_dir):
+#    process_file(file)
