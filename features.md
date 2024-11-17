@@ -67,6 +67,38 @@ class: ['normal', 'impersonation', 'flooding', 'injection']
 |  0.028187059577194102 |              1.0 | 3.789170550566481e-05              |         0.005952380952380952 |            0.41880341880341865 |          0.0 |          0.0 |          1.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |1.0 |0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |      0.0 |      1.0 |      0.0 |      0.0 |        0.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    1.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
 |  0.028187059577194102 |              1.0 | 1.8945852752832404e-05             |         0.005952380952380952 |            0.41880341880341865 |          0.0 |          0.0 |          1.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0 |1.0 |0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |      0.0 |      1.0 |      0.0 |      0.0 |        0.0 |             0.0 |              1.0 |               0.0 |0.0 | 0.0 |   0.0 |    1.0 |0.0 |1.0 | 0.027586206896551724 |     0 |
 
+### Distribution of attacks in full dataset:
+
+Of all the CSV files containing 802.11 Layer II attacks, only those containing any attack samples were chosen.  
+
+| Label | Count     | %       | AWID3 Attacks                       |
+|-------|-----------|---------|----------------
+| 0     | 6107176   | 92.892% | 
+| 1     | 311378    | 4.736%  | Deauth, Disas, (Re)Assoc, Kr00k
+| 2     | 155940    | 2.372%  | Rogue AP, Krack, Evil Twin
+
+### Distribution of attacks in sequential dataset
+
+The data was divded int windows of size Sequence Length, offset by Sequence shift, from the resulting sequences only those were chosen, that contained at least one positive sample
+
+| Sequence length | Sequence shift | Total samples | Attack Samples | Attack % | Normal Samples | Normal % |
+|-----------------|----------------|---------------|----------------|----------|----------------|----------|
+| 1024            | 960            | 6208512       | 498528         | 8.0%     | 5709984        | 92.0 %   |
+| 512             | 480            | 5430784       | 498596         | 9.2%     | 4932188        | 90.8 %   |
+| 256             | 240            | 4483328       | 498355         | 11.1%    | 3984973        | 88.9 %   |
+| 128             | 120            | 3598080       | 498505         | 13.9%    | 3099575        | 86.1 %   |
+| 64              | 60             | 2899072       | 498603         | 17.2%    | 2400469        | 82.8 %   |
+| 32              | 30             | 2360416       | 498386         | 21.1%    | 1862030        | 78.9 %   |
+| 16              | 15             | 1943152       | 498327         | 25.6%    | 1444825        | 74.4 %   |
+| 8               | 7              | 1683056       | 534173         | 31.7%    | 1148883        | 68.3 %   |
+| 6               | 5              | 1609128       | 560293         | 34.8%    | 1048835        | 65.2 %   |
+| 4               | 4              | 1181040       | 467318         | 39.6%    | 713722         | 60.4 %   |
+| 4               | 3              | 1574064       | 623000         | 39.6%    | 951064         | 60.4 %   |
+| 3               | 3              | 988476        | 467318         | 47.3%    | 521158         | 52.7 %   |
+| 3               | 2              | 1483170       | 701189         | 47.3%    | 781981         | 52.7 %   |
+| 3               | 1              | 2966124       | 1401954        | 47.3%    | 1564170        | 52.7 %   |
+
+
 ### Distribution of attack samples in files
 
 | File          | Normal Count | Normal (%) | Anomalous Count | Anomalous (%) |
@@ -142,7 +174,7 @@ class: ['normal', 'impersonation', 'flooding', 'injection']
 | Kr00k_54      | 39,664       | 79.328%    | 10,336          | 20.672%       |
 | Kr00k_55      | 41,233       | 82.466%    | 8,767           | 17.534%       |
 | Kr00k_56      | 44,743       | 89.486%    | 5,257           | 10.514%       |
-| Kr00k_57      | 46,082       | 92.166%    | 3,917           | 7.834%        ||               |
+| Kr00k_57      | 46,082       | 92.166%    | 3,917           | 7.834%        |
 | Evil_Twin_29  | 49,835       | 99.670%    | 165             | 0.330%        |
 | Evil_Twin_30  | 49,834       | 99.670%    | 165             | 0.330%        |
 | Evil_Twin_31  | 49,653       | 99.306%    | 347             | 0.694%        |
@@ -206,18 +238,6 @@ class: ['normal', 'impersonation', 'flooding', 'injection']
 | (Re)Assoc_35   | 49,692       | 99.384%    | 308           | 0.616%        |
 | (Re)Assoc_36   | 43,764       | 99.602%    | 175           | 0.398%        |
 
-
-Total count of labels across all files (by label):
-Label 0: 6107634 (92.972%)
-Label 1: 119575 (1.820%)
-Label 2: 105950 (1.613%)
-Label 3: 236163 (3.595%)
-
-[<tf.Tensor: shape=(), dtype=int32, numpy=2537973>, <tf.Tensor: shape=(), dtype=int32, numpy=527883>]
-
-total 3 065 856
-attack 17,2%
-normal 82,7%
 
 #### Balanced dataset
 
