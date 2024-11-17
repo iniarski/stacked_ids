@@ -48,8 +48,8 @@ def process_csv_files(files, categorical_columns, numerical_columns):
     
     # Summarize numerical columns
     print("\n### Numerical Column Summary")
-    print("| Column | Mean | Variance | Median | 25th percentile | 50th percentile | 75th percentile |")
-    print("|--------|------|----------|--------|-----------------|-----------------|-----------------|")
+    print("| Column | Mean | Variance | 25th percentile | 50th percentile | 75th percentile |")
+    print("|--------|------|----------|-----------------|-----------------|-----------------|")
     for col, values_list in num_stats.items():
         if not values_list:
             continue

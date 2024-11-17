@@ -378,7 +378,9 @@ The data was divded int windows of size Sequence Length, offset by Sequence shif
 | Evil_Twin_72 | 0 | 96 | 2 | 96 |
 | Evil_Twin_73 | 0 | 101 | 2 | 101 |
 | Evil_Twin_74 | 0 | 99 | 2 | 99 |
-| Evil_Twin_75 | 0 | 51 | 2 | 51 |Kr00k
+| Evil_Twin_75 | 0 | 51 | 2 | 51 |
+
+## Kr00k
 ### Categorical Column Summary
 
 #### wlan.fc.type_0
@@ -578,16 +580,19 @@ The data was divded int windows of size Sequence Length, offset by Sequence shif
 | 0 | 191803 | 50.00% |
 | 1 | 191803 | 50.00% |
 
+
 ### Numerical Column Summary
-| Column | Mean | Variance | Median | 25th percentile | 50th percentile | 75th percentile |
-|--------|------|----------|--------|-----------------|-----------------|-----------------|
+| Column | Mean | Variance | 25th percentile | 50th percentile | 75th percentile |
+|--------|------|----------|-----------------|-----------------|-----------------|
 | frame.len  | 0.0309  | 0.0127  | 0.0019  | 0.0051  | 0.0051  |
 | radiotap.length  | 0.0769  | 0.0710  | 0.0000  | 0.0000  | 0.0000  |
 | frame.time_delta  | 0.0050  | 0.0002  | 0.0015  | 0.0025  | 0.0031  |
 | wlan.duration  | 0.0135  | 0.0014  | 0.0058  | 0.0073  | 0.0073  |
 | radiotap.dbm_antsignal  | 0.6442  | 0.0946  | 0.3382  | 0.8382  | 0.8382  |
 | freq  | 0.0276  | 0.0000  | 0.0276  | 0.0276  | 0.0276  |
-Other
+
+
+## Other
 ### Categorical Column Summary
 
 #### wlan.fc.type_0
@@ -794,8 +799,8 @@ Other
 | 2 | 155940 | 28.30% |
 
 ### Numerical Column Summary
-| Column | Mean | Variance | Median | 25th percentile | 50th percentile | 75th percentile |
-|--------|------|----------|--------|-----------------|-----------------|-----------------|
+| Column | Mean | Variance | 25th percentile | 50th percentile | 75th percentile |
+|--------|------|----------|-----------------|-----------------|-----------------|
 | frame.len  | 0.1398  | 0.0468  | 0.0051  | 0.0058  | 0.4681  |
 | radiotap.length  | 0.3193  | 0.2173  | 0.0000  | 0.0000  | 1.0000  |
 | frame.time_delta  | 0.0134  | 0.0033  | 0.0001  | 0.0015  | 0.0056  |
