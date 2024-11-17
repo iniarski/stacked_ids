@@ -37,6 +37,8 @@ Mostly binary features having values 0 an 1
 * 5ghz_spectrum
 * freq
 
+
+AWID2
 wlan.fc.type: [0, 1, 2, 3, '2', '0', '1', '?']
 wlan.fc.subtype: [0, 1, 2, 3, 4, 5, '12', 6, 8, 9, 10, 11, 12, 13, 14, '0', 7, '5', '8', '?', '9', '11', '4', '13']
 wlan.fc.ds: ['0x03', '0x02', '0x01', '0x00', '?']
@@ -376,4 +378,427 @@ The data was divded int windows of size Sequence Length, offset by Sequence shif
 | Evil_Twin_72 | 0 | 96 | 2 | 96 |
 | Evil_Twin_73 | 0 | 101 | 2 | 101 |
 | Evil_Twin_74 | 0 | 99 | 2 | 99 |
-| Evil_Twin_75 | 0 | 51 | 2 | 51 |
+| Evil_Twin_75 | 0 | 51 | 2 | 51 |Kr00k
+### Categorical Column Summary
+
+#### wlan.fc.type_0
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 229963 | 59.95% |
+| 0.0 | 153643 | 40.05% |
+
+#### wlan.fc.type_1
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 261849 | 68.26% |
+| 1.0 | 121757 | 31.74% |
+
+#### wlan.fc.type_2
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 351720 | 91.69% |
+| 1.0 | 31886 | 8.31% |
+
+#### wlan.fc.subtype_0
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383170 | 99.89% |
+| 1.0 | 436 | 0.11% |
+
+#### wlan.fc.subtype_1
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383601 | 100.00% |
+| 1.0 | 5 | 0.00% |
+
+#### wlan.fc.subtype_2
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383588 | 100.00% |
+| 1.0 | 18 | 0.00% |
+
+#### wlan.fc.subtype_3
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383582 | 99.99% |
+| 1.0 | 24 | 0.01% |
+
+#### wlan.fc.subtype_4
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383404 | 99.95% |
+| 1.0 | 202 | 0.05% |
+
+#### wlan.fc.subtype_5
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 382037 | 99.59% |
+| 1.0 | 1569 | 0.41% |
+
+#### wlan.fc.subtype_6
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383606 | 100.00% |
+
+#### wlan.fc.subtype_7
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383606 | 100.00% |
+
+#### wlan.fc.subtype_8
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 351894 | 91.73% |
+| 1.0 | 31712 | 8.27% |
+
+#### wlan.fc.subtype_9
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 371841 | 96.93% |
+| 1.0 | 11765 | 3.07% |
+
+#### wlan.fc.subtype_10
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 191814 | 50.00% |
+| 0.0 | 191792 | 50.00% |
+
+#### wlan.fc.subtype_11
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 364175 | 94.93% |
+| 1.0 | 19431 | 5.07% |
+
+#### wlan.fc.subtype_12
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 370526 | 96.59% |
+| 1.0 | 13080 | 3.41% |
+
+#### wlan.fc.subtype_13
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 270058 | 70.40% |
+| 1.0 | 113548 | 29.60% |
+
+#### wlan.fc.subtype_14
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383604 | 100.00% |
+| 1.0 | 2 | 0.00% |
+
+#### wlan.fc.subtype_15
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383606 | 100.00% |
+
+#### wlan.fc.ds_0
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 351721 | 91.69% |
+| 0.0 | 31885 | 8.31% |
+
+#### wlan.fc.ds_1
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 374837 | 97.71% |
+| 1.0 | 8769 | 2.29% |
+
+#### wlan.fc.ds_2
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 360493 | 93.97% |
+| 1.0 | 23113 | 6.03% |
+
+#### wlan.fc.ds_3
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383603 | 100.00% |
+| 1.0 | 3 | 0.00% |
+
+#### radiotap.present.tsft
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 352443 | 91.88% |
+| 0.0 | 31163 | 8.12% |
+
+#### radiotap.channel.flags.cck
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383606 | 100.00% |
+
+#### radiotap.channel.flags.ofdm
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 383606 | 100.00% |
+
+#### wlan.fc.frag
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383605 | 100.00% |
+| 1.0 | 1 | 0.00% |
+
+#### wlan.fc.retry
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 370209 | 96.51% |
+| 1.0 | 13397 | 3.49% |
+
+#### wlan.fc.pwrmgt
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383462 | 99.96% |
+| 1.0 | 144 | 0.04% |
+
+#### wlan.fc.moredata
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383338 | 99.93% |
+| 1.0 | 268 | 0.07% |
+
+#### wlan.fc.protected
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 318583 | 83.05% |
+| 1.0 | 65023 | 16.95% |
+
+#### 2ghz_spectrum
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 383606 | 100.00% |
+
+#### 5ghz_spectrum
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 383606 | 100.00% |
+
+#### Label
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0 | 191803 | 50.00% |
+| 1 | 191803 | 50.00% |
+
+### Numerical Column Summary
+| Column | Mean | Variance | Median | 25th percentile | 50th percentile | 75th percentile |
+|--------|------|----------|--------|-----------------|-----------------|-----------------|
+| frame.len  | 0.0309  | 0.0127  | 0.0019  | 0.0051  | 0.0051  |
+| radiotap.length  | 0.0769  | 0.0710  | 0.0000  | 0.0000  | 0.0000  |
+| frame.time_delta  | 0.0050  | 0.0002  | 0.0015  | 0.0025  | 0.0031  |
+| wlan.duration  | 0.0135  | 0.0014  | 0.0058  | 0.0073  | 0.0073  |
+| radiotap.dbm_antsignal  | 0.6442  | 0.0946  | 0.3382  | 0.8382  | 0.8382  |
+| freq  | 0.0276  | 0.0000  | 0.0276  | 0.0276  | 0.0276  |
+Other
+### Categorical Column Summary
+
+#### wlan.fc.type_0
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 152141 | 27.61% |
+| 0.0 | 398889 | 72.39% |
+
+#### wlan.fc.type_1
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 389210 | 70.63% |
+| 1.0 | 161820 | 29.37% |
+
+#### wlan.fc.type_2
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 313961 | 56.98% |
+| 1.0 | 237069 | 43.02% |
+
+#### wlan.fc.subtype_0
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 546495 | 99.18% |
+| 1.0 | 4535 | 0.82% |
+
+#### wlan.fc.subtype_1
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 550836 | 99.96% |
+| 1.0 | 194 | 0.04% |
+
+#### wlan.fc.subtype_2
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 548908 | 99.61% |
+| 1.0 | 2122 | 0.39% |
+
+#### wlan.fc.subtype_3
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 550887 | 99.97% |
+| 1.0 | 143 | 0.03% |
+
+#### wlan.fc.subtype_4
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 549606 | 99.74% |
+| 1.0 | 1424 | 0.26% |
+
+#### wlan.fc.subtype_5
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 548135 | 99.47% |
+| 1.0 | 2895 | 0.53% |
+
+#### wlan.fc.subtype_6
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 551030 | 100.00% |
+
+#### wlan.fc.subtype_7
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 551030 | 100.00% |
+
+#### wlan.fc.subtype_8
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 309417 | 56.15% |
+| 1.0 | 241613 | 43.85% |
+
+#### wlan.fc.subtype_9
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 514918 | 93.45% |
+| 1.0 | 36112 | 6.55% |
+
+#### wlan.fc.subtype_10
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 481921 | 87.46% |
+| 1.0 | 69109 | 12.54% |
+
+#### wlan.fc.subtype_11
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 499680 | 90.68% |
+| 1.0 | 51350 | 9.32% |
+
+#### wlan.fc.subtype_12
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 84508 | 15.34% |
+| 0.0 | 466522 | 84.66% |
+
+#### wlan.fc.subtype_13
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 494043 | 89.66% |
+| 1.0 | 56987 | 10.34% |
+
+#### wlan.fc.subtype_14
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 550993 | 99.99% |
+| 1.0 | 37 | 0.01% |
+
+#### wlan.fc.subtype_15
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 551029 | 100.00% |
+| 1.0 | 1 | 0.00% |
+
+#### wlan.fc.ds_0
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 314004 | 56.98% |
+| 0.0 | 237026 | 43.02% |
+
+#### wlan.fc.ds_1
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 455075 | 82.59% |
+| 1.0 | 95955 | 17.41% |
+
+#### wlan.fc.ds_2
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 409994 | 74.41% |
+| 1.0 | 141036 | 25.59% |
+
+#### wlan.fc.ds_3
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 550995 | 99.99% |
+| 1.0 | 35 | 0.01% |
+
+#### radiotap.present.tsft
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 319728 | 58.02% |
+| 0.0 | 231302 | 41.98% |
+
+#### radiotap.channel.flags.cck
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 531106 | 96.38% |
+| 1.0 | 19924 | 3.62% |
+
+#### radiotap.channel.flags.ofdm
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 471119 | 85.50% |
+| 0.0 | 79911 | 14.50% |
+
+#### wlan.fc.frag
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 551002 | 99.99% |
+| 1.0 | 28 | 0.01% |
+
+#### wlan.fc.retry
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 478834 | 86.90% |
+| 1.0 | 72196 | 13.10% |
+
+#### wlan.fc.pwrmgt
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 548721 | 99.58% |
+| 1.0 | 2309 | 0.42% |
+
+#### wlan.fc.moredata
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 543724 | 98.67% |
+| 1.0 | 7306 | 1.33% |
+
+#### wlan.fc.protected
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 398589 | 72.34% |
+| 1.0 | 152441 | 27.66% |
+
+#### 2ghz_spectrum
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 0.0 | 451050 | 81.86% |
+| 1.0 | 99980 | 18.14% |
+
+#### 5ghz_spectrum
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1.0 | 451050 | 81.86% |
+| 0.0 | 99980 | 18.14% |
+
+#### Label
+| Category | Count | Percentage |
+|----------|-------|------------|
+| 1 | 119575 | 21.70% |
+| 0 | 275515 | 50.00% |
+| 2 | 155940 | 28.30% |
+
+### Numerical Column Summary
+| Column | Mean | Variance | Median | 25th percentile | 50th percentile | 75th percentile |
+|--------|------|----------|--------|-----------------|-----------------|-----------------|
+| frame.len  | 0.1398  | 0.0468  | 0.0051  | 0.0058  | 0.4681  |
+| radiotap.length  | 0.3193  | 0.2173  | 0.0000  | 0.0000  | 1.0000  |
+| frame.time_delta  | 0.0134  | 0.0033  | 0.0001  | 0.0015  | 0.0056  |
+| wlan.duration  | 0.0155  | 0.0021  | 0.0032  | 0.0075  | 0.0173  |
+| radiotap.dbm_antsignal  | 0.6433  | 0.0677  | 0.4017  | 0.6325  | 0.8971  |
+| freq  | 0.1209  | 0.0774  | 0.0276  | 0.0276  | 0.0276  |
