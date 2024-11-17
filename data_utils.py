@@ -102,7 +102,8 @@ def binary_sequence_has_attack(x, y):
     return tf.math.not_equal(tf.reduce_max(y), 0)
 
 def multiclass_sequence_has_attack(x, y):
-    return tf.math.not_equal(tf.reduce_max(y, axis=0), tf.constant([1, 0, 0]))
+    reduced  = tf.math.equal(tf.reduce_max(y, axis=0), tf.ones((3, )))
+    return tf.math.logical_or(reduced[1], reduced[2])
 
 def create_binary_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift = 56, batch_size = 32, filter_out_normal = True, shuffle=True):
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files)

@@ -2,11 +2,11 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import data_utils
-from tensorflow.keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropout
+from tensorflow.keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout, Reshape
 import random
 
 
-model_path = 'saved_models/binary_cnn_lstm.keras'
+model_path = 'saved_models/binary_td_cnn.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
@@ -16,21 +16,21 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     verbose=1
 )
 
-def binary_CNN_LSTM_model():
+def binary_time_domain_CNN_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(60, 5, activation='relu', padding='same'),
+        Reshape((64, 39)),
+        Conv1D(256, 3, activation='relu', padding='same'),
         Dropout(0.2),
-        LSTM(128, activation='tanh', return_sequences=True),
-        TimeDistributed(Dropout(0.2)),
-        LSTM(128, activation='tanh', return_sequences=True),
-        TimeDistributed(Dropout(0.2)),
-        TimeDistributed(Dense(240, activation='relu')),
-        TimeDistributed(Dropout(0.2)),
+        Conv1D(128, 5, activation='relu', padding='same'),
+        Dropout(0.2),
+        Conv1D(64, 7, activation='relu', padding='same'),
+        Dropout(0.2),
+        TimeDistributed(Dense(32, activation='relu')),
         TimeDistributed(Dense(1, activation='sigmoid')),
       ])
 
@@ -51,7 +51,7 @@ def main():
     import data_utils
 
 
-    tfrecords_dir='dataset/AWID3_tfrecords'
+    tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
@@ -59,20 +59,21 @@ def main():
     train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
     test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
 
-    epochs = 10
+    epochs = 20
     batch_size = 100
 
-    model = binary_CNN_LSTM_model()
+    model = binary_time_domain_CNN_model()
 
     train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 
-    train_ds = data_utils.create_binary_sequential_dataset(train_set, seq_length=3, seq_shift=3, batch_size=batch_size)
+    train_ds = data_utils.create_binary_sequential_dataset(train_set, batch_size=batch_size)
     test_ds = data_utils.create_binary_sequential_dataset(test_set,batch_size=batch_size, shuffle=False)
 
     model.fit(
     train_ds,
     validation_data = test_ds,
+    validation_freq = 3,
     epochs=epochs,
     callbacks=[checkpoint_callback]
     )

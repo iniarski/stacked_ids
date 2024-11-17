@@ -53,54 +53,41 @@ def binary_DNN_model():
         return model
 
 def main():
-    random.seed(42)
     import data_utils
-    data_utils.awid3_attacks = [
-    'Deauth',
-    'Disas',
-    '(Re)Assoc',
-    'RogueAP',
-    'Krack',
-    #'Kr00k',
-    'Evil_Twin'
-    ]
-    
+    random.seed(42)
+
+
+
     tfrecords_dir='dataset/AWID3_tfrecords_balanced'
+
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
-    full_train_files, full_test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+    train_files, test_files = data_utils.train_test_split(tfrecords_files, train_ratio)
+    train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
+    test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
+    epochs = 25
 
-    epochs = 5
-    batch_size = 200
-    files_added = 5
-    
-    train_files = []
-    test_files = full_test_files
+    train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
+
+    batch_size = 50
+
+    raw_train_ds = tf.data.TFRecordDataset(train_set)
+    train_ds = raw_train_ds.map(data_utils.parse_binary_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
     raw_test_ds = tf.data.TFRecordDataset(test_set)
     test_ds = raw_test_ds.map(data_utils.parse_binary_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
-    
+
+
     model = binary_DNN_model()
+    model.fit(train_ds,
+              validation_data=test_ds,
+              epochs=epochs,
+              callbacks = [checkpoint_callback],)
 
     model.summary()
-    
-    while len(train_files) < len(full_train_files):
-        n_files = min(len(train_files) + files_added, len(full_train_files))
-        train_files = full_train_files[:n_files]
-        print(n_files, train_files)
-        files_added += 1
-        
-        train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
-        raw_train_ds = tf.data.TFRecordDataset(train_set)
-        train_ds = raw_train_ds.map(data_utils.parse_binary_record).shuffle(10000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-        
-        model.fit(
-        train_ds,              
-        validation_data = test_ds,
-        epochs=epochs,
-        callbacks=[checkpoint_callback]
-        )
+
 
 if __name__ == '__main__':
     main()

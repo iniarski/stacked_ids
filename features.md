@@ -37,6 +37,22 @@ Mostly binary features having values 0 an 1
 * 5ghz_spectrum
 * freq
 
+wlan.fc.type: [0, 1, 2, 3, '2', '0', '1', '?']
+wlan.fc.subtype: [0, 1, 2, 3, 4, 5, '12', 6, 8, 9, 10, 11, 12, 13, 14, '0', 7, '5', '8', '?', '9', '11', '4', '13']
+wlan.fc.ds: ['0x03', '0x02', '0x01', '0x00', '?']
+radiotap.present.tsft: [1, '1', '?']
+radiotap.dbm_antsignal: ['-21', '-51', '-85', '-47', '-90', '-63', '-57', '?', '-27', '-81', '-75', '-105', '-69', '-99', '-80', '-49', '-88', '-94', '-35', '-26', '-39', '-14', '-117', '-107', '-17', '-44', '-29', '-78', '-34', '-23', '-76', '-53', '-48', '-52', '-58', '-101', '-45', '-102', '-55', '-33', '-113', '-32', '-93', '-108', '-54', '-38', '-103', '-28', '-109', '-60', '-86', '-56', '-46', '-96', '-71', '-91', '-66', '-79', '-19', '-114', '-123', '-42', '-16', '-59', '-106', '-61', '-18', '-82', '-40', '-70', '-11', '-98', '-24', '-30', '-89', '-62', '-31', '-22', -111, '-12', '-65', '-36', '-15', -110, '-84', '-74', '-97', '-20', '-100', '-25', '-73', '-87', '-104', '-13', '-37', '-10', -108, '-110', '-95', '-83', '-64', -124, -123, -121, '-43', -113, '-111', '-112', -112, -109, '-41', -107, -106, -105, -104, -103, -102, -101, -100, -99, -98, -97, -96, -95, -94, -93, -92, -91, -90, -89, -88, -87, -86, -85, -84, -83, -82, -81, -80, -79, -78, -77, -76, -75, -74, -73, -72, -71, -70, -69, -68, -67, -66, -65, -64, -63, -62, -61, -60, -59, -58, -57, -56, -55, -54, -53, -52, -51, -50, -49, -48, -47, -46, -45, -44, -43, -42, -41, -40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, '-77', -13, -12, -11, -10, -9, '-72', -14, '-92', '-68', '-67', '-50']
+radiotap.channel.freq: ['2462', 2462, '?']
+radiotap.channel.type.cck: [0, '?', '0']
+radiotap.channel.type.ofdm: [0, 1, '0', '1', '?']
+wlan.fc.frag: [0, 1, '?', '0']
+wlan.fc.retry: [0, 1, '0', '1', '?']
+wlan.fc.pwrmgt: [0, 1, '0', '1', '?']
+wlan.fc.moredata: [0, 1, '0', '1', '?']
+wlan.fc.protected: [0, 1, '0', '1', '?']
+class: ['normal', 'impersonation', 'flooding', 'injection']
+
+
 #### Head of a preporcessed csv file
 
 | frame.len__frame.len  | radiotap.length__radiotap.length | frame.time_delta__frame.time_delta | wlan.duration__wlan.duration | radiotap.dbm_antsignal__radiotap.dbm_antsignal | wlan.fc.type__wlan.fc.type_0 | wlan.fc.type__wlan.fc.type_1 | wlan.fc.type__wlan.fc.type_2 | wlan.fc.subtype__wlan.fc.subtype_0 | wlan.fc.subtype__wlan.fc.subtype_1 | wlan.fc.subtype__wlan.fc.subtype_2 | wlan.fc.subtype__wlan.fc.subtype_3 | wlan.fc.subtype__wlan.fc.subtype_4 | wlan.fc.subtype__wlan.fc.subtype_5 | wlan.fc.subtype__wlan.fc.subtype_6 | wlan.fc.subtype__wlan.fc.subtype_7 | wlan.fc.subtype__wlan.fc.subtype_8 | wlan.fc.subtype__wlan.fc.subtype_9 | wlan.fc.subtype__wlan.fc.subtype_10 | wlan.fc.subtype__wlan.fc.subtype_11 | wlan.fc.subtype__wlan.fc.subtype_12 | wlan.fc.subtype__wlan.fc.subtype_13 | wlan.fc.subtype__wlan.fc.subtype_14 | wlan.fc.subtype__wlan.fc.subtype_15 | wlan.fc.ds__wlan.fc.ds_0 | wlan.fc.ds__wlan.fc.ds_1 | wlan.fc.ds__wlan.fc.ds_2 | wlan.fc.ds__wlan.fc.ds_3 | bin__radiotap.present.tsft | bin__radiotap.channel.flags.cck | bin__radiotap.channel.flags.ofdm | bin__wlan.fc.frag | bin__wlan.fc.retry | bin__wlan.fc.pwrmgt | bin__wlan.fc.moredata | bin__wlan.fc.protected | bin__2ghz_spectrum | bin__5ghz_spectrum | bin__freq            | Label |

@@ -6,7 +6,7 @@ from tensorflow.keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropou
 import random
 
 
-model_path = 'saved_models/binary_cnn_lstm.keras'
+model_path = 'saved_models/multiclass_cnn_lstm.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
@@ -16,7 +16,7 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     verbose=1
 )
 
-def binary_CNN_LSTM_model():
+def multiclass_CNN_LSTM_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
@@ -31,7 +31,7 @@ def binary_CNN_LSTM_model():
         TimeDistributed(Dropout(0.2)),
         TimeDistributed(Dense(240, activation='relu')),
         TimeDistributed(Dropout(0.2)),
-        TimeDistributed(Dense(1, activation='sigmoid')),
+        TimeDistributed(Dense(3, activation='softmax')),
       ])
 
         optimizer = tf.keras.optimizers.Adam(
@@ -40,7 +40,7 @@ def binary_CNN_LSTM_model():
 
 
         model.compile(optimizer=optimizer,
-                    loss='binary_crossentropy',
+                    loss='categorical_crossentropy',
                     metrics=['accuracy', 'precision', 'recall']
                     )
 
@@ -51,24 +51,23 @@ def main():
     import data_utils
 
 
-    tfrecords_dir='dataset/AWID3_tfrecords'
+    tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
-    test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
+    #train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
+    #test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
 
     epochs = 10
-    batch_size = 100
 
-    model = binary_CNN_LSTM_model()
+    model = multiclass_CNN_LSTM_model()
 
     train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 
-    train_ds = data_utils.create_binary_sequential_dataset(train_set, seq_length=3, seq_shift=3, batch_size=batch_size)
-    test_ds = data_utils.create_binary_sequential_dataset(test_set,batch_size=batch_size, shuffle=False)
+    train_ds = data_utils.create_multiclass_sequential_dataset(train_set, seq_length=1, seq_shift=1, filter_out_normal=False)
+    test_ds = data_utils.create_multiclass_sequential_dataset(test_set, seq_length=1, seq_shift=1, filter_out_normal=False, shuffle=False)
 
     model.fit(
     train_ds,

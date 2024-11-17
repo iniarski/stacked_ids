@@ -72,6 +72,8 @@ def main():
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio, shuffle=False)
     epochs = 15
 
+    train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
+    test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
     train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 

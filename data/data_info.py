@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from collections import defaultdict
 
-directory_path = 'dataset/AWID3_preprocessed'
+directory_path = 'dataset/AWID3_CSV_preprocessed'
 
 files_with_non_zero_labels = [] 
 total_label_counts = defaultdict(int) 
@@ -12,7 +12,7 @@ for filename in os.listdir(directory_path):
         file_path = os.path.join(directory_path, filename)
         
         try:
-            data = pd.read_csv(file_path)
+            data = pd.read_csv(file_path, usecols=['Label'])
         except Exception as e:
             print(f"Could not read {filename}: {e}")
             continue

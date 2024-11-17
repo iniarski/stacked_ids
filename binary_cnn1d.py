@@ -11,7 +11,7 @@ model_path = 'saved_models/binary_cnn1d.keras'
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
     save_best_only=True,
-    monitor='f1_score',
+    monitor='recall',
     mode='max',
     verbose=1
 )
@@ -24,15 +24,15 @@ def binary_CNN1D_model(n_features = 39):
     else:
         model = tf.keras.models.Sequential([
         Reshape((1, n_features)),
-        Conv1D(256, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.2),
         Conv1D(128, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.2),
+        Dropout(0.25),
         Conv1D(64, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.2),
+        Dropout(0.25),
+        Conv1D(32, 1, activation='relu', padding='same', strides=1),
+        Dropout(0.25),
         Flatten(),
         Dense(100, activation='relu', kernel_regularizer=L2(0.01)),
-        Dropout(0.2),
+        Dropout(0.25),
         Dense(1, activation='sigmoid')
       ])
 
@@ -57,27 +57,33 @@ def main():
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files = data_utils.train_test_split(tfrecords_files, train_ratio)
+    kr00k_train_files = list(filter(lambda f : f.startswith('Kr00k'), train_files))
     train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
-    test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
-    epochs = 15
+    epochs = 3
 
-    train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 
-    batch_size = 50
-
-    raw_train_ds = tf.data.TFRecordDataset(train_set)
-    train_ds = raw_train_ds.map(data_utils.parse_binary_record).shuffle(100000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
+    batch_size = 200
+    model = binary_CNN1D_model()
+    
     raw_test_ds = tf.data.TFRecordDataset(test_set)
     test_ds = raw_test_ds.map(data_utils.parse_binary_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    i = 0
+    for kr00k_file in kr00k_train_files:
+        train_files.append(kr00k_file)
+        random.shuffle(train_files)
+        train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
+        i+=1
+        print('Kr00k files in dataset:', i)
+        
+        raw_train_ds = tf.data.TFRecordDataset(train_set)
+        train_ds = raw_train_ds.map(data_utils.parse_binary_record).shuffle(100000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
-    model = binary_CNN1D_model()
-    model.fit(train_ds,
-              validation_data = test_ds,
-              epochs=epochs,
-              callbacks = [checkpoint_callback],
-              )
+        model.fit(train_ds,
+                validation_data = test_ds,
+                epochs=epochs,
+                callbacks = [checkpoint_callback],
+                )
 
 if __name__ == '__main__':
     main()
