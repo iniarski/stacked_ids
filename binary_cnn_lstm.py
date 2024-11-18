@@ -40,7 +40,7 @@ def binary_CNN_LSTM_model():
 
         loss = tf.keras.losses.BinaryFocalCrossentropy(
             apply_class_balancing=True,
-            alpha=0.9,
+            alpha=0.2,
             gamma=2
         )
 
@@ -65,6 +65,10 @@ def main():
     batch_size = 16
     histories = []
     model = binary_CNN_LSTM_model()
+    
+    if model.built:
+        data_utils.evaluate_for_attack_types(model, data_utils.create_binary_sequential_dataset)
+        return
 
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 

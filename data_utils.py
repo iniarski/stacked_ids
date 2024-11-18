@@ -148,3 +148,16 @@ def create_multiclass_sequential_dataset(tfrecords_files, seq_length = 64, seq_s
     sequence_dataset = sequence_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     return sequence_dataset
+
+def evaluate_for_attack_types(model, dataset_function, train_ratio=0.8, tfrecords_dir='dataset/AWID3_tfrecords'):
+    _, test_files = train_test_split(os.listdir(tfrecords_dir))
+    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
+
+    cat_files = [list(filter(lambda f: f.startswith(attack),test_files)) for attack in awid3_attacks]
+
+    for files in cat_files:
+        print(files)
+        test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
+
+        test_ds = dataset_function(test_set)
+        model.evaluate(test_ds)

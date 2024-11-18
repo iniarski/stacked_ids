@@ -10,8 +10,8 @@ model_path = 'saved_models/multiclass_cnn_lstm.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
-    save_best_only=False,
-    monitor='recall',
+    save_best_only=True,
+    monitor='val_accuracy',
     mode='max',
     verbose=1
 )
@@ -23,13 +23,13 @@ def multiclass_CNN_LSTM_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(60, 5, activation='relu', padding='same'),
+        Conv1D(128, 5, activation='relu', padding='same'),
         Dropout(0.2),
         LSTM(128, activation='tanh', return_sequences=True),
         TimeDistributed(Dropout(0.2)),
-        LSTM(128, activation='tanh', return_sequences=True),
+        LSTM(64, activation='tanh', return_sequences=True),
         TimeDistributed(Dropout(0.2)),
-        TimeDistributed(Dense(240, activation='relu')),
+        TimeDistributed(Dense(32, activation='relu')),
         TimeDistributed(Dropout(0.2)),
         TimeDistributed(Dense(3, activation='softmax')),
       ])
@@ -37,10 +37,13 @@ def multiclass_CNN_LSTM_model():
         optimizer = tf.keras.optimizers.Adam(
             learning_rate = 10 ** -4
         )
-
+        loss = tf.keras.losses.CategoricalFocalCrossentropy(
+            alpha=0.2,
+            gamma=2
+        )
 
         model.compile(optimizer=optimizer,
-                    loss='categorical_crossentropy',
+                    loss=loss,
                     metrics=['accuracy', 'precision', 'recall']
                     )
 
@@ -51,32 +54,50 @@ def main():
     import data_utils
 
 
-    tfrecords_dir='dataset/AWID3_tfrecords_balanced'
-    train_ratio = 0.8
+    tfrecords_dir='dataset/AWID3_tfrecords'
+    train_ratio = 0.01
     tfrecords_files = os.listdir(tfrecords_dir)
-    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+    full_train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    #train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
-    #test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
-
-    epochs = 10
-
+    epochs = 6
+    batch_size = 16
+    histories = []
     model = multiclass_CNN_LSTM_model()
-
-    train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
+    
+    if model.built:
+        data_utils.evaluate_for_attack_types(model, data_utils.create_multiclass_sequential_dataset)
+        return
+    
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 
-    train_ds = data_utils.create_multiclass_sequential_dataset(train_set, seq_length=1, seq_shift=1, filter_out_normal=False)
-    test_ds = data_utils.create_multiclass_sequential_dataset(test_set, seq_length=1, seq_shift=1, filter_out_normal=False, shuffle=False)
+    test_ds = data_utils.create_multiclass_sequential_dataset(test_set,batch_size=batch_size, shuffle=False, filter_out_normal=False)
 
-    model.fit(
-    train_ds,
-    validation_data = test_ds,
-    epochs=epochs,
-    callbacks=[checkpoint_callback]
-    )
+    cat_files = [list(filter(lambda f: f.startswith(attack),test_files)) for attack in data_utils.awid3_attacks]
+    
+    
+    n_files = 4
+    increment = 1
+
+    while n_files < len(full_train_files):
+        train_files = full_train_files[:min(n_files, len(full_train_files))]
+        random.shuffle(train_files)
+        train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
+        train_ds = data_utils.create_multiclass_sequential_dataset(train_set, seq_length=20, seq_shift=16, batch_size=batch_size)
+        n_files+=increment
+        increment+=1
+        history = model.fit(
+        train_ds,
+        validation_data = test_ds,
+        epochs=epochs,
+        callbacks=[checkpoint_callback],
+        validation_freq=epochs // 2
+        )
+
+        histories.append(history.history)
 
     model.summary()
+
+    print(histories)
 
 
 if __name__ == '__main__':
