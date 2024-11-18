@@ -2,7 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import data_utils
-from tensorflow.keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropout
+from tensorflow.keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropout, MaxPooling1D, Bidirectional, Reshape
 import random
 
 
@@ -23,19 +23,16 @@ def binary_CNN_LSTM_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(60, 5, activation='relu', padding='same'),
+        Conv1D(32, 3, activation='relu', padding='same'),
+        MaxPooling1D(pool_size=2, padding='same', strides=1),
+        Bidirectional(LSTM(32, activation='tanh', return_sequences=True)),
         Dropout(0.2),
-        LSTM(128, activation='tanh', return_sequences=True),
-        TimeDistributed(Dropout(0.2)),
-        LSTM(128, activation='tanh', return_sequences=True),
-        TimeDistributed(Dropout(0.2)),
-        TimeDistributed(Dense(240, activation='relu')),
-        TimeDistributed(Dropout(0.2)),
+        TimeDistributed(Dense(25, activation='relu')),
         TimeDistributed(Dense(1, activation='sigmoid')),
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -4
+            learning_rate = 10 ** -5
         )
 
 
@@ -59,15 +56,15 @@ def main():
     train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
     test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
 
-    epochs = 10
-    batch_size = 100
+    epochs = 5
+    batch_size = 50
 
     model = binary_CNN_LSTM_model()
 
     train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 
-    train_ds = data_utils.create_binary_sequential_dataset(train_set, seq_length=3, seq_shift=3, batch_size=batch_size)
+    train_ds = data_utils.create_binary_sequential_dataset(train_set, batch_size=batch_size)
     test_ds = data_utils.create_binary_sequential_dataset(test_set,batch_size=batch_size, shuffle=False)
 
     model.fit(

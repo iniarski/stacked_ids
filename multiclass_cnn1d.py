@@ -11,7 +11,7 @@ model_path = 'saved_models/multiclass_cnn1d.keras'
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
     save_best_only=True,
-    monitor='f1_score',
+    monitor='val_accuracy',
     mode='max',
     verbose=1
 )
@@ -58,9 +58,7 @@ def main():
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files = data_utils.train_test_split(tfrecords_files, train_ratio)
-    #train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
-    #test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
-    epochs = 15
+    epochs = 30
 
     train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
@@ -68,7 +66,7 @@ def main():
     batch_size = 50
 
     raw_train_ds = tf.data.TFRecordDataset(train_set)
-    train_ds = raw_train_ds.map(data_utils.parse_multiclass_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    train_ds = raw_train_ds.map(data_utils.parse_multiclass_record).batch(batch_size).shuffle(5000).prefetch(tf.data.AUTOTUNE)
 
     raw_test_ds = tf.data.TFRecordDataset(test_set)
     test_ds = raw_test_ds.map(data_utils.parse_multiclass_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
@@ -78,6 +76,7 @@ def main():
     model = multiclass_CNN1D_model()
     model.fit(train_ds,
               validation_data=test_ds,
+              validation_freq=3,
               epochs=epochs,
               callbacks = [checkpoint_callback],)
 
