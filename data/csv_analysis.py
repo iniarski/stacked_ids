@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 
+from awid2_data_preprocessing import awid2_cols, awid2_usecols, awid2_rename, to_int
+
 def parse_column_name(c):
     c = str(c).split("__")[-1]
     if c.endswith('.0'):
@@ -15,9 +17,10 @@ def process_csv_files(files, categorical_columns, numerical_columns):
     
     for file in files:
         try:
-            df = pd.read_csv(file)
+            df = pd.read_csv(file, names=awid2_cols, usecols=awid2_usecols)
             df.rename(
-                columns=parse_column_name,
+                columns=awid2_rename,
+                #columns=parse_column_name,
                 inplace=True
             )
             
@@ -31,7 +34,9 @@ def process_csv_files(files, categorical_columns, numerical_columns):
 
             for col in numerical_columns:
                 if col in df.columns:
-                    num_stats[col].append(df[col].dropna())
+                    num_stats[col].append(pd.to_numeric(df[col], errors='coerce').dropna())
+                else:
+                    print(col, 'na')
         
         except Exception as e:
             print(f"Error processing file {file}: {e}")
@@ -48,52 +53,34 @@ def process_csv_files(files, categorical_columns, numerical_columns):
     
     # Summarize numerical columns
     print("\n### Numerical Column Summary")
-    print("| Column | Mean | Variance | 25th percentile | 50th percentile | 75th percentile |")
-    print("|--------|------|----------|-----------------|-----------------|-----------------|")
+    print("| Column | Mean | Variance | Min | 25th percentile | 50th percentile | 75th percentile | Max |")
+    print("|--------|------|----------|-----|-----------------|-----------------|-----------------|-----|")
     for col, values_list in num_stats.items():
         if not values_list:
             continue
         combined_values = pd.concat(values_list)
-        mean = combined_values.mean(),
-        var =  combined_values.var(),
-        q25 = combined_values.quantile(0.25),
-        q50 = combined_values.quantile(0.5),
-        q75 = combined_values.quantile(0.75),
+        mean = combined_values.mean()
+        var =  combined_values.var()
+        _min = combined_values.min()
+        q25 = combined_values.quantile(0.25)
+        q50 = combined_values.quantile(0.5)
+        q75 = combined_values.quantile(0.75)
+        _max = combined_values.max()
 
-        print(f'| {col}  | {mean[0]:.4f}  | {var[0]:.4f}  | {q25[0]:.4f}  | {q50[0]:.4f}  | {q75[0]:.4f}  |')
+        print(f'| {col}  | {mean:.4f}  | {_min:.4f}  | {var:.4f}  | {q25:.4f}  | {q50:.4f}  | {q75:.4f}  | {_max:.4f}  |')
 
 if __name__ == "__main__":
-    csv_dir = 'dataset/AWID3_CSV_balanced'
-    all_files = os.listdir(csv_dir)
-    kr00k_files = list(filter(lambda f : f.startswith('Kr00k'), all_files))
-    other_files = list(filter(lambda f : not f.startswith('Kr00k'), all_files))
-    kr00k_paths = [os.path.join(csv_dir, f) for f in kr00k_files]
-    other_paths = [os.path.join(csv_dir, f) for f in other_files]
+    csv_dir = 'dataset/AWID2/AWID-CLS-F-Trn'
+    files = os.listdir(csv_dir)
+    from random import shuffle
+    shuffle(files)
+    files = files[:len(files) // 5]
+    paths = [os.path.join(csv_dir, f) for f in files]
     
     categorical_columns = [
-    'wlan.fc.type_0',
-    'wlan.fc.type_1',
-    'wlan.fc.type_2',
-    'wlan.fc.subtype_0',
-    'wlan.fc.subtype_1',
-    'wlan.fc.subtype_2',
-    'wlan.fc.subtype_3',
-    'wlan.fc.subtype_4',
-    'wlan.fc.subtype_5',
-    'wlan.fc.subtype_6',
-    'wlan.fc.subtype_7',
-    'wlan.fc.subtype_8',
-    'wlan.fc.subtype_9',
-    'wlan.fc.subtype_10',
-    'wlan.fc.subtype_11',
-    'wlan.fc.subtype_12',
-    'wlan.fc.subtype_13',
-    'wlan.fc.subtype_14',
-    'wlan.fc.subtype_15',
-    'wlan.fc.ds_0',
-    'wlan.fc.ds_1',
-    'wlan.fc.ds_2',
-    'wlan.fc.ds_3',
+    'wlan.fc.type',
+    'wlan.fc.subtype',
+    'wlan.fc.ds',
     'radiotap.present.tsft',
     'radiotap.channel.flags.cck',
     'radiotap.channel.flags.ofdm',
@@ -102,8 +89,6 @@ if __name__ == "__main__":
     'wlan.fc.pwrmgt', 
     'wlan.fc.moredata', 
     'wlan.fc.protected', 
-    '2ghz_spectrum',
-    '5ghz_spectrum', 
     'Label']
     numerical_columns = [
     'frame.len', 
@@ -111,12 +96,11 @@ if __name__ == "__main__":
     'frame.time_delta',
     'wlan.duration',
     'radiotap.dbm_antsignal',
-    'freq', ]
+    ]
+    
+    process_csv_files(paths, categorical_columns, numerical_columns)
 
-    print('Kr00k')    
-    process_csv_files(kr00k_paths, categorical_columns, numerical_columns)
-    print('Other')    
-    process_csv_files(other_paths, categorical_columns, numerical_columns)
+
     
     
     

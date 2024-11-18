@@ -58,7 +58,7 @@ def main():
 
 
 
-    tfrecords_dir='dataset/AWID3_tfrecords_balanced'
+    tfrecords_dir='dataset/AWID3_tfrecords'
 
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)

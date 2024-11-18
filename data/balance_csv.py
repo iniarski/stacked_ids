@@ -2,8 +2,8 @@ import os
 import pandas as pd
 from sklearn.utils import resample
 
-src_directory_path = 'dataset/AWID3_CSV_preprocessed'
-target_directory_path = 'dataset/AWID3_CSV_balanced'
+src_directory_path = 'dataset/AWID2_CSV_preprocessed/train'
+target_directory_path = 'dataset/AWID2_CSV_preprocessed/train_balanced'
 
 
 def balance_csv_file(src_path, target_path):
