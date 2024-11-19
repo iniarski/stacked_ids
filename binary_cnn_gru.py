@@ -2,7 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import data_utils
-from tensorflow.keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout
+from tensorflow.keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout, Reshape
 import random
 
 
@@ -10,8 +10,8 @@ model_path = 'saved_models/binary_cnn_gru.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
-    save_best_only=False,
-    monitor='recall',
+    save_best_only=True,
+    monitor='val_accuracy',
     mode='max',
     verbose=1
 )
@@ -23,16 +23,21 @@ def binary_CNN_GRU_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(60, 5, activation='relu', padding='same'),
+        Conv1D(64, 1, activation='relu', padding='same'),
         Dropout(0.2),
-        GRU(128, activation='tanh', return_sequences=True),
-        TimeDistributed(Dropout(0.2)),
-        GRU(128, activation='tanh', return_sequences=True),
-        TimeDistributed(Dropout(0.2)),
-        TimeDistributed(Dense(240, activation='relu')),
-        TimeDistributed(Dropout(0.2)),
+        Conv1D(32, 1, activation='relu', padding='same'),
+        Dropout(0.2),
+        GRU(48, return_sequences=True),
+        Dropout(0.2),
+        TimeDistributed(Dense(32, activation='relu')),
         TimeDistributed(Dense(1, activation='sigmoid')),
       ])
+        
+        loss = tf.keras.losses.BinaryFocalCrossentropy(
+            apply_class_balancing=True,
+            alpha=0.8,
+            gamma=1.8
+        )
 
         optimizer = tf.keras.optimizers.Adam(
             learning_rate = 10 ** -4
@@ -40,7 +45,7 @@ def binary_CNN_GRU_model():
 
 
         model.compile(optimizer=optimizer,
-                    loss='binary_crossentropy',
+                    loss=loss,
                     metrics=['accuracy', 'precision', 'recall']
                     )
 
@@ -51,33 +56,36 @@ def main():
     import data_utils
 
 
+def main():
+    random.seed(42)
+    import data_utils
+
     tfrecords_dir='dataset/AWID3_tfrecords'
     train_ratio = 0.8
-    tfrecords_files = os.listdir(tfrecords_dir)
-    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
-    test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
-
-    epochs = 20
-    batch_size = 100
 
     model = binary_CNN_GRU_model()
+    dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60)
 
-    train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
-    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
+    if model.built:
+        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
+        data_utils.per_attack_test(model, dataset_lambda)
+    else :
+        tfrecords_files = os.listdir(tfrecords_dir)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60, filter_out_normal=False)
+        train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
+        test_files = [os.path.join(tfrecords_dir, f) for f in test_files]
 
-    train_ds = data_utils.create_binary_sequential_dataset(train_set, batch_size=batch_size)
-    test_ds = data_utils.create_binary_sequential_dataset(test_set,batch_size=batch_size, shuffle=False)
+        histories = data_utils.step_training(
+            train_files=train_files,
+            test_files=test_files,
+            model=model,
+            dataset_callback=dataset_lambda,
+            training_callbacks=[checkpoint_callback],
+        )
 
-    model.fit(
-    train_ds,
-    validation_data = test_ds,
-    epochs=epochs,
-    callbacks=[checkpoint_callback]
-    )
-
-    model.summary()
+        print(histories)
 
 
 if __name__ == '__main__':
