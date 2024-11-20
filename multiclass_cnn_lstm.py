@@ -65,40 +65,26 @@ def main():
     model = multiclass_CNN_LSTM_model()
     
     if model.built:
-        data_utils.evaluate_for_attack_types(model, data_utils.create_multiclass_sequential_dataset)
-        return
-    
-    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
-
-    test_ds = data_utils.create_multiclass_sequential_dataset(test_set,batch_size=batch_size, shuffle=False, filter_out_normal=False)
-
-    cat_files = [list(filter(lambda f: f.startswith(attack),test_files)) for attack in data_utils.awid3_attacks]
-    
-    
-    n_files = 4
-    increment = 1
-
-    while n_files < len(full_train_files):
-        train_files = full_train_files[:min(n_files, len(full_train_files))]
-        random.shuffle(train_files)
-        train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
-        train_ds = data_utils.create_multiclass_sequential_dataset(train_set, seq_length=20, seq_shift=16, batch_size=batch_size)
-        n_files+=increment
-        increment+=1
-        history = model.fit(
-        train_ds,
-        validation_data = test_ds,
-        epochs=epochs,
-        callbacks=[checkpoint_callback],
-        validation_freq=epochs // 2
-        )
-
-        histories.append(history.history)
-
-    model.summary()
-
-    print(histories)
-
+        dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
+        data_utils.per_attack_test(model, dataset_lambda)
+    else :
+        tfrecords_files = os.listdir(tfrecords_dir)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
+        validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
+        histories = data_utils.step_training(
+            train_files, 
+            validation_files, 
+            model, 
+            dataset_lambda, 
+            training_callbacks=[checkpoint_callback],
+            epochs_per_step=5,
+            n_initial_files=2,
+            )
+        model.summary()
+        print(histories)
+        data_utils.per_attack_test(test_files, dataset_lambda)
 
 if __name__ == '__main__':
     main()

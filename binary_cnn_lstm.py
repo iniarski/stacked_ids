@@ -79,9 +79,8 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=4,
-            n_initial_files=10,
-            increment=5
+            epochs_per_step=5,
+            n_initial_files=2,
             )
         model.summary()
         print(histories)

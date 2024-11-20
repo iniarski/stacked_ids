@@ -2,6 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import random
+import math
 
 features = [
     'frame.len',
@@ -211,7 +212,7 @@ def step_training(
         val_freq : int = 1,
         training_callbacks = None,
         n_initial_files : int = 15,
-        increment : int = 10
+        increment : float = 0.1
     ):
     test_ds = dataset_callback(test_files)
 
@@ -227,7 +228,7 @@ def step_training(
         for file in current_train_files:
             print(file.split('/')[-1].split('.')[0], end=',')
         print()
-        n_files += increment
+        n_files = math.ceil(n_files * increment)
 
         train_ds = dataset_callback(current_train_files)
         history = model.fit(
