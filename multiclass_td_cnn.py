@@ -2,11 +2,11 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import data_utils
-from tensorflow.keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout, Reshape
+from tensorflow.keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout, Reshape, AveragePooling1D, MaxPooling1D
 import random
 
 
-model_path = 'saved_models/binary_cnn_gru.keras'
+model_path = 'saved_models/multiclass_td_cnn.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
@@ -16,27 +16,28 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     verbose=1
 )
 
-def binary_CNN_GRU_model():
+def multiclass_time_domain_CNN_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(64, 1, activation='relu', padding='same'),
+        Conv1D(128, 1, activation='relu', padding='same'),
+        #MaxPooling1D(pool_size=2, padding='same', strides=1),
         Dropout(0.2),
-        Conv1D(32, 1, activation='relu', padding='same'),
+        Conv1D(64, 3, activation='relu', padding='same'),
+        #MaxPooling1D(pool_size=2, padding='same', strides=1),
         Dropout(0.2),
-        GRU(48, return_sequences=True),
+        Conv1D(32, 5, activation='relu', padding='same'),
+        #MaxPooling1D(pool_size=2, padding='same', strides=1),
         Dropout(0.2),
         TimeDistributed(Dense(32, activation='relu')),
-        TimeDistributed(Dense(1, activation='sigmoid')),
+        TimeDistributed(Dense(3, activation='softmax')),
       ])
-        
-        loss = tf.keras.losses.BinaryFocalCrossentropy(
-            apply_class_balancing=True,
-            alpha=0.8,
-            gamma=1.8
+
+        loss = tf.keras.losses.CategoricalFocalCrossentropy(
+            gamma=2
         )
 
         optimizer = tf.keras.optimizers.Adam(
@@ -55,25 +56,19 @@ def main():
     random.seed(42)
     import data_utils
 
-
-def main():
-    random.seed(42)
-    import data_utils
-
     tfrecords_dir='dataset/AWID3_tfrecords'
     train_ratio = 0.8
 
+    model = multiclass_time_domain_CNN_model()
 
-    model = binary_CNN_GRU_model()
-    dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60)
 
     if model.built:
-        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
+        dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files)
-        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60, filter_out_normal=False)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         test_files = [os.path.join(tfrecords_dir, f) for f in test_files]
 

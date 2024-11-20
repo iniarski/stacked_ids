@@ -6,7 +6,7 @@ from tensorflow.keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout
 import random
 
 
-model_path = 'saved_models/binary_cnn_gru.keras'
+model_path = 'saved_models/binary_gru.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
@@ -16,27 +16,24 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     verbose=1
 )
 
-def binary_CNN_GRU_model():
+def binary_GRU_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(64, 1, activation='relu', padding='same'),
+        Dense(40, activation='relu'),
         Dropout(0.2),
-        Conv1D(32, 1, activation='relu', padding='same'),
+        GRU(32, return_sequences=True),
         Dropout(0.2),
-        GRU(48, return_sequences=True),
-        Dropout(0.2),
-        TimeDistributed(Dense(32, activation='relu')),
         TimeDistributed(Dense(1, activation='sigmoid')),
       ])
-        
+
         loss = tf.keras.losses.BinaryFocalCrossentropy(
             apply_class_balancing=True,
-            alpha=0.8,
-            gamma=1.8
+            alpha = 0.9,
+            gamma = 1.5
         )
 
         optimizer = tf.keras.optimizers.Adam(
@@ -64,29 +61,32 @@ def main():
     train_ratio = 0.8
 
 
-    model = binary_CNN_GRU_model()
+    model = binary_GRU_model()
     dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60)
 
     if model.built:
         dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
+        epochs = 15
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files)
-        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60, filter_out_normal=False)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
-        test_files = [os.path.join(tfrecords_dir, f) for f in test_files]
-
+        validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         histories = data_utils.step_training(
-            train_files=train_files,
-            test_files=test_files,
-            model=model,
-            dataset_callback=dataset_lambda,
+            train_files, 
+            validation_files, 
+            model, 
+            dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-        )
-
+            epochs_per_step=4,
+            n_initial_files=10,
+            increment=5
+            )
+        model.summary()
         print(histories)
-
+        data_utils.per_attack_test(test_files, dataset_lambda)
 
 if __name__ == '__main__':
     main()

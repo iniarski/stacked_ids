@@ -6,7 +6,7 @@ from tensorflow.keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout
 import random
 
 
-model_path = 'saved_models/binary_cnn_gru.keras'
+model_path = 'saved_models/multiclass_cnn_gru_lite.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
@@ -16,26 +16,23 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     verbose=1
 )
 
-def binary_CNN_GRU_model():
+def multiclass_CNN_GRU_lite_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(64, 1, activation='relu', padding='same'),
+        Conv1D(40, 1, activation='relu', padding='same'),
         Dropout(0.2),
-        Conv1D(32, 1, activation='relu', padding='same'),
+        GRU(32, return_sequences=True),
         Dropout(0.2),
-        GRU(48, return_sequences=True),
-        Dropout(0.2),
-        TimeDistributed(Dense(32, activation='relu')),
-        TimeDistributed(Dense(1, activation='sigmoid')),
+        TimeDistributed(Dense(3, activation='softmax')),
       ])
-        
-        loss = tf.keras.losses.BinaryFocalCrossentropy(
-            apply_class_balancing=True,
-            alpha=0.8,
+
+        loss = tf.keras.losses.CategoricalFocalCrossentropy(
+            #apply_class_balancing=True,
+            #alpha=0.8,
             gamma=1.8
         )
 
@@ -64,16 +61,16 @@ def main():
     train_ratio = 0.8
 
 
-    model = binary_CNN_GRU_model()
-    dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60)
+    model = multiclass_CNN_GRU_lite_model()
+    dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, seq_length=64, seq_shift=60)
 
     if model.built:
-        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
+        dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files)
-        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60, filter_out_normal=False)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, seq_length=64, seq_shift=60, filter_out_normal=True)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         test_files = [os.path.join(tfrecords_dir, f) for f in test_files]
 

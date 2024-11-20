@@ -1,10 +1,10 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import random
 
 features = [
-    'frame.len', 
+    'frame.len',
     'radiotap.length',
     'frame.time_delta',
     'wlan.duration',
@@ -36,12 +36,12 @@ features = [
     'radiotap.channel.flags.cck',
     'radiotap.channel.flags.ofdm',
     'wlan.fc.frag', 'wlan.fc.retry',
-    'wlan.fc.pwrmgt', 
-    'wlan.fc.moredata', 
-    'wlan.fc.protected', 
+    'wlan.fc.pwrmgt',
+    'wlan.fc.moredata',
+    'wlan.fc.protected',
     '2ghz_spectrum',
-    '5ghz_spectrum', 
-    'freq', 
+    '5ghz_spectrum',
+    'freq',
     'Label']
 
 
@@ -58,10 +58,13 @@ awid3_attacks = [
 ]
 
 def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle : bool = True) -> (list[str], list[str]):
-    random.seed(42)
     test_set = []
     train_set = []
-    
+
+    # sorting files an using random seed for consistent splitting
+    random.seed(42)
+    file_names.sort()
+
     for attack_name in awid3_attacks:
         attack_files = list(filter(lambda name: name.startswith(attack_name) and name.endswith('.tfrecords'), file_names))
         if len(attack_files) == 0:
@@ -76,14 +79,14 @@ def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle 
             test_set.append(f)
         for f in train_files:
             train_set.append(f)
-        
+
     if shuffle:
         random.shuffle(test_set)
         random.shuffle(train_set)
-        
+
     return train_set, test_set
-    
-    
+
+
 def parse_binary_record(example_proto):
     parsed_features = tf.io.parse_single_example(example_proto, feature_description)
     label = parsed_features.pop('Label')
@@ -117,7 +120,7 @@ def create_binary_sequential_dataset(
         shuffle : bool = True,
         shuffle_buffer : int = 2048
         ) -> tf.data.Dataset :
-    
+
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
     parsed_dataset = raw_dataset.map(parse_binary_record)
 
@@ -148,7 +151,7 @@ def create_multiclass_sequential_dataset(
         shuffle : bool = True,
         shuffle_buffer : int = 2048
         ) -> tf.data.Dataset :
-    
+
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
     parsed_dataset = raw_dataset.map(parse_multiclass_record)
 
@@ -170,32 +173,19 @@ def create_multiclass_sequential_dataset(
 
     return sequence_dataset
 
-<<<<<<< HEAD
-def evaluate_for_attack_types(model, dataset_function, train_ratio=0.8, tfrecords_dir='dataset/AWID3_tfrecords'):
-    _, test_files = train_test_split(os.listdir(tfrecords_dir))
-    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
 
-    cat_files = [list(filter(lambda f: f.startswith(attack),test_files)) for attack in awid3_attacks]
-
-    for files in cat_files:
-        print(files)
-        test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
-
-        test_ds = dataset_function(test_set)
-        model.evaluate(test_ds)
-=======
 def create_binary_dataset(
         tfrecords_files : list[int],
         batch_size : int = 50,
         shuffle : bool = True,
         shuffle_buffer : int = 10000
         ) -> tf.data.Dataset:
-    
+
     raw_ds = tf.data.TFRecordDataset(tfrecords_files)
     ds = raw_ds.map(parse_binary_record)
     if shuffle:
         ds = ds.shuffle(shuffle_buffer)
-    
+
     return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
 def create_multiclass_dataset(
@@ -204,39 +194,40 @@ def create_multiclass_dataset(
         shuffle : bool = True,
         shuffle_buffer : int = 10000
         ) -> tf.data.Dataset:
-    
+
     raw_ds = tf.data.TFRecordDataset(tfrecords_files)
     ds = raw_ds.map(parse_multiclass_record)
     if shuffle:
         ds = ds.shuffle(shuffle_buffer)
-    
+
     return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
 def step_training(
         train_files : list[str],
         test_files : list[str],
         model,
-        dataset_callback, 
-        epochs_per_step : int = 4, 
-        val_freq : int = 2,
+        dataset_callback,
+        epochs_per_step : int = 5,
+        val_freq : int = 1,
         training_callbacks = None,
-        n_initial_files : int = 3,
-        initial_increment : int = 1
+        n_initial_files : int = 15,
+        increment : int = 10
     ):
     test_ds = dataset_callback(test_files)
 
     n_files = n_initial_files
-    increment = initial_increment
+
     current_train_files = []
     histrories = []
     random.shuffle(test_files)
 
     while len(current_train_files) < len(train_files):
         current_train_files = train_files[:min(len(train_files), n_files)]
-        print(current_train_files)
         random.shuffle(current_train_files)
+        for file in current_train_files:
+            print(file.split('/')[-1].split('.')[0], end=',')
+        print()
         n_files += increment
-        increment += 1
 
         train_ds = dataset_callback(current_train_files)
         history = model.fit(
@@ -247,20 +238,19 @@ def step_training(
             callbacks = training_callbacks,
         )
 
-        histrories.append(history.history)
-        
+        histrories.extend(history.history)
+    return histories
 
 
-def per_attack_test(model, dataset_callback, train_ratio=0.8, tfrecords_dir='dataset\\AWID3_tfrecords'):
+
+def per_attack_test(model, dataset_callback, train_ratio=0.8, tfrecords_dir='dataset/AWID3_tfrecords'):
     _, all_test_files = train_test_split(os.listdir(tfrecords_dir), train_ratio=train_ratio)
 
 
     per_attack_files = [list(filter(lambda f : f.startswith(attack), all_test_files)) for attack in awid3_attacks]
     for files in per_attack_files:
         test_set = [os.path.join(tfrecords_dir, f) for f in files]
-        print(files)
+        for file in files:
+            print(file.split('.')[0], end=' , ')
         ds = dataset_callback(test_set)
         model.evaluate(ds)
-
-
->>>>>>> de47bebfb788bdc8edf4dd81367930aaecf62c51
