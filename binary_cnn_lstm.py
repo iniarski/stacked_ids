@@ -40,7 +40,7 @@ def binary_CNN_LSTM_model():
 
         loss = tf.keras.losses.BinaryFocalCrossentropy(
             apply_class_balancing=True,
-            alpha=0.2,
+            alpha=0.8,
             gamma=2
         )
 
@@ -55,50 +55,29 @@ def main():
     random.seed(42)
     import data_utils
 
-
     tfrecords_dir='dataset/AWID3_tfrecords'
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
-    full_train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    epochs = 4
-    batch_size = 16
-    histories = []
     model = binary_CNN_LSTM_model()
-    
+    dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=16, seq_shift=15, batch_size=50)
+
     if model.built:
-        data_utils.evaluate_for_attack_types(model, data_utils.create_binary_sequential_dataset)
-        return
+        data_utils.per_attack_test(model, lambda x : data_utils.create_binary_sequential_dataset(x , filter_out_normal=False))
+    else :
+        train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
+        test_files = [os.path.join(tfrecords_dir, f) for f in test_files]
 
-    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
-
-    test_ds = data_utils.create_binary_sequential_dataset(test_set,batch_size=batch_size, shuffle=False, filter_out_normal=False)
-    train_ds = data_utils.create_binary_sequential_dataset(train_set, seq_length=20, seq_shift=16, batch_size=batch_size)
-
-    
-    n_files = 4
-    increment = 1
-
-    while n_files < len(full_train_files):
-        train_files = full_train_files[:min(n_files, len(full_train_files))]
-        random.shuffle(train_files)
-        train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
-        train_ds = data_utils.create_binary_sequential_dataset(train_set, seq_length=20, seq_shift=16, batch_size=batch_size)
-        n_files+=increment
-        increment+=1
-        history = model.fit(
-        train_ds,
-        validation_data = test_ds,
-        epochs=epochs,
-        callbacks=[checkpoint_callback],
-        validation_freq=epochs // 2
+        histories = data_utils.step_training(
+            train_files=train_files,
+            test_files=test_files,
+            model=model,
+            dataset_callback=dataset_lambda,
+            training_callbacks=[checkpoint_callback],
         )
 
-        histories.append(history.history)
-
-    model.summary()
-
-    print(histories)
+        print(histories)
 
 
 if __name__ == '__main__':

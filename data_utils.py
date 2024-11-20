@@ -58,6 +58,7 @@ awid3_attacks = [
 ]
 
 def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle : bool = True) -> (list[str], list[str]):
+    random.seed(42)
     test_set = []
     train_set = []
     
@@ -98,14 +99,25 @@ def parse_multiclass_record(example_proto):
     features = tf.stack(list(parsed_features.values()))
     return features, label
 
+@tf.function
 def binary_sequence_has_attack(x, y):
     return tf.math.not_equal(tf.reduce_max(y), 0)
 
+@tf.function
 def multiclass_sequence_has_attack(x, y):
     reduced  = tf.math.equal(tf.reduce_max(y, axis=0), tf.ones((3, )))
     return tf.math.logical_or(reduced[1], reduced[2])
 
-def create_binary_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift = 56, batch_size = 32, filter_out_normal = True, shuffle=True):
+def create_binary_sequential_dataset(
+        tfrecords_files : list[str],
+        seq_length : int = 32,
+        seq_shift : int = 30,
+        batch_size : int = 32,
+        filter_out_normal : bool = True,
+        shuffle : bool = True,
+        shuffle_buffer : int = 2048
+        ) -> tf.data.Dataset :
+    
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
     parsed_dataset = raw_dataset.map(parse_binary_record)
 
@@ -122,12 +134,21 @@ def create_binary_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift
     if filter_out_normal:
         sequence_dataset = sequence_dataset.filter(binary_sequence_has_attack)
     if shuffle:
-        sequence_dataset = sequence_dataset.shuffle(1000)
+        sequence_dataset = sequence_dataset.shuffle(shuffle_buffer)
     sequence_dataset = sequence_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     return sequence_dataset
 
-def create_multiclass_sequential_dataset(tfrecords_files, seq_length = 64, seq_shift = 56, batch_size = 32, filter_out_normal = True, shuffle=True):
+def create_multiclass_sequential_dataset(
+        tfrecords_files : list[str],
+        seq_length : int = 32,
+        seq_shift : int = 30,
+        batch_size : int = 32,
+        filter_out_normal : bool = True,
+        shuffle : bool = True,
+        shuffle_buffer : int = 2048
+        ) -> tf.data.Dataset :
+    
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
     parsed_dataset = raw_dataset.map(parse_multiclass_record)
 
@@ -144,11 +165,12 @@ def create_multiclass_sequential_dataset(tfrecords_files, seq_length = 64, seq_s
     if filter_out_normal:
         sequence_dataset = sequence_dataset.filter(multiclass_sequence_has_attack)
     if shuffle:
-        sequence_dataset = sequence_dataset.shuffle(1000)
+        sequence_dataset = sequence_dataset.shuffle(shuffle_buffer)
     sequence_dataset = sequence_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     return sequence_dataset
 
+<<<<<<< HEAD
 def evaluate_for_attack_types(model, dataset_function, train_ratio=0.8, tfrecords_dir='dataset/AWID3_tfrecords'):
     _, test_files = train_test_split(os.listdir(tfrecords_dir))
     test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
@@ -161,3 +183,84 @@ def evaluate_for_attack_types(model, dataset_function, train_ratio=0.8, tfrecord
 
         test_ds = dataset_function(test_set)
         model.evaluate(test_ds)
+=======
+def create_binary_dataset(
+        tfrecords_files : list[int],
+        batch_size : int = 50,
+        shuffle : bool = True,
+        shuffle_buffer : int = 10000
+        ) -> tf.data.Dataset:
+    
+    raw_ds = tf.data.TFRecordDataset(tfrecords_files)
+    ds = raw_ds.map(parse_binary_record)
+    if shuffle:
+        ds = ds.shuffle(shuffle_buffer)
+    
+    return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+def create_multiclass_dataset(
+        tfrecords_files : list[int],
+        batch_size : int = 50,
+        shuffle : bool = True,
+        shuffle_buffer : int = 10000
+        ) -> tf.data.Dataset:
+    
+    raw_ds = tf.data.TFRecordDataset(tfrecords_files)
+    ds = raw_ds.map(parse_multiclass_record)
+    if shuffle:
+        ds = ds.shuffle(shuffle_buffer)
+    
+    return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+def step_training(
+        train_files : list[str],
+        test_files : list[str],
+        model,
+        dataset_callback, 
+        epochs_per_step : int = 4, 
+        val_freq : int = 2,
+        training_callbacks = None,
+        n_initial_files : int = 3,
+        initial_increment : int = 1
+    ):
+    test_ds = dataset_callback(test_files)
+
+    n_files = n_initial_files
+    increment = initial_increment
+    current_train_files = []
+    histrories = []
+    random.shuffle(test_files)
+
+    while len(current_train_files) < len(train_files):
+        current_train_files = train_files[:min(len(train_files), n_files)]
+        print(current_train_files)
+        random.shuffle(current_train_files)
+        n_files += increment
+        increment += 1
+
+        train_ds = dataset_callback(current_train_files)
+        history = model.fit(
+            train_ds,
+            validation_data = test_ds,
+            epochs = epochs_per_step,
+            validation_freq = val_freq,
+            callbacks = training_callbacks,
+        )
+
+        histrories.append(history.history)
+        
+
+
+def per_attack_test(model, dataset_callback, train_ratio=0.8, tfrecords_dir='dataset\\AWID3_tfrecords'):
+    _, all_test_files = train_test_split(os.listdir(tfrecords_dir), train_ratio=train_ratio)
+
+
+    per_attack_files = [list(filter(lambda f : f.startswith(attack), all_test_files)) for attack in awid3_attacks]
+    for files in per_attack_files:
+        test_set = [os.path.join(tfrecords_dir, f) for f in files]
+        print(files)
+        ds = dataset_callback(test_set)
+        model.evaluate(ds)
+
+
+>>>>>>> de47bebfb788bdc8edf4dd81367930aaecf62c51
