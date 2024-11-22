@@ -219,8 +219,16 @@ def step_training(
     n_files = n_initial_files
 
     current_train_files = []
-    histrories = []
+    histories = []
     random.shuffle(test_files)
+    # dividing files to be in evenly distributed
+    per_attack_files = [[f for f in train_files if attack in f] for attack in awid3_attacks]
+    train_files = []
+    while len(per_attack_files) > 0:
+        for attack_files in per_attack_files:
+            random.shuffle(attack_files)
+            train_files.append(attack_files.pop(0))
+        per_attack_files = [af for af in per_attack_files if len(af) > 0]
 
     while len(current_train_files) < len(train_files):
         current_train_files = train_files[:min(len(train_files), n_files)]
@@ -228,8 +236,7 @@ def step_training(
         for file in current_train_files:
             print(file.split('/')[-1].split('.')[0], end=',')
         print()
-        n_files = math.ceil(n_files * increment)
-
+        n_files += math.ceil(n_files * increment)
         train_ds = dataset_callback(current_train_files)
         history = model.fit(
             train_ds,
@@ -239,7 +246,7 @@ def step_training(
             callbacks = training_callbacks,
         )
 
-        histrories.extend(history.history)
+        histories.append(history.history)
     return histories
 
 
@@ -253,5 +260,6 @@ def per_attack_test(model, dataset_callback, train_ratio=0.8, tfrecords_dir='dat
         test_set = [os.path.join(tfrecords_dir, f) for f in files]
         for file in files:
             print(file.split('.')[0], end=' , ')
+        print()
         ds = dataset_callback(test_set)
         model.evaluate(ds)

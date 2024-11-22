@@ -45,16 +45,16 @@ def process_file(file):
         convert_csv_to_tfrecord(csv_path, tfrecord_path)
 
 
-for file in os.listdir(csv_dir):
-    process_file(file)
+#for file in os.listdir(csv_dir):
+#    process_file(file)
 #with ProcessPoolExecutor() as executor:
 #    executor.map(process_file, os.listdir(csv_dir))
 
-#csv_dir = 'dataset/AWID2_CSV_preprocessed/test_balanced'
-#tfrecord_dir = 'dataset/AWID2_tfrecords/test_balanced'
+csv_dir = 'dataset/AWID2_CSV_preprocessed/test_balanced'
+tfrecord_dir = 'dataset/AWID2_tfrecords/test_balanced'
 
 #with ProcessPoolExecutor() as executor:
 #   executor.map(process_file, os.listdir(csv_dir))
 
-#for file in os.listdir(csv_dir):
-#    process_file(file)
+for file in os.listdir(csv_dir):
+    process_file(file)

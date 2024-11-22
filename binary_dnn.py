@@ -47,47 +47,44 @@ def binary_DNN_model():
 
         model.compile(optimizer=optimizer,
                     loss='binary_crossentropy',
-                    metrics=['accuracy', 'precision', 'recall', 'f1_score']
+                    metrics=['accuracy', 'precision', 'recall']
                     )
 
         return model
 
 def main():
     import data_utils
-    random.seed(42)
 
-
-
-    tfrecords_dir='dataset/AWID3_tfrecords'
-
+    tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
-    train_files, test_files = data_utils.train_test_split(tfrecords_files, train_ratio)
-    train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
-    test_files = list(filter(lambda f : not f.startswith('Kr00k'), test_files))
-    epochs = 25
-
-    train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
-    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
-
-    batch_size = 50
-
-    raw_train_ds = tf.data.TFRecordDataset(train_set)
-    train_ds = raw_train_ds.map(data_utils.parse_binary_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
-    raw_test_ds = tf.data.TFRecordDataset(test_set)
-    test_ds = raw_test_ds.map(data_utils.parse_binary_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
-
+    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
     model = binary_DNN_model()
-    model.fit(train_ds,
-              validation_data=test_ds,
-              epochs=epochs,
-              callbacks = [checkpoint_callback],)
+    dataset_lambda = lambda x : data_utils.create_binary_dataset(x)
 
-    model.summary()
-
+    if model.built:
+        data_utils.per_attack_test(model, dataset_lambda)
+    else :
+        epochs = 30
+        tfrecords_files = os.listdir(tfrecords_dir)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, val_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
+        val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
+        train_ds = dataset_lambda(train_files)
+        val_ds = dataset_lambda(val_files)
+        
+        history = model.fit(
+            train_ds,
+            validation_data = val_ds,
+            epochs = epochs,
+            callbacks = [checkpoint_callback]
+        )
+        
+        model.summary()
+        print(history.history)
+        data_utils.per_attack_test(model, dataset_lambda)
 
 if __name__ == '__main__':
     main()

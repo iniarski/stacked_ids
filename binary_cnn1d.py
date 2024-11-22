@@ -11,7 +11,7 @@ model_path = 'saved_models/binary_cnn1d.keras'
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
     save_best_only=True,
-    monitor='recall',
+    monitor='val_accuracy',
     mode='max',
     verbose=1
 )
@@ -42,48 +42,45 @@ def binary_CNN1D_model(n_features = 39):
 
         model.compile(optimizer=optimizer,
                     loss='binary_crossentropy',
-                    metrics=['accuracy', 'precision', 'recall', 'f1_score']
+                    metrics=['accuracy', 'precision', 'recall']
                     )
 
         return model
 
 def main():
-    import data_utils
     random.seed(42)
-    
+    import data_utils
 
     tfrecords_dir='dataset/AWID3_tfrecords_balanced'
-
     train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
-    train_files, test_files = data_utils.train_test_split(tfrecords_files, train_ratio)
-    kr00k_train_files = list(filter(lambda f : f.startswith('Kr00k'), train_files))
-    train_files = list(filter(lambda f : not f.startswith('Kr00k'), train_files))
-    epochs = 3
+    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
-
-    batch_size = 200
     model = binary_CNN1D_model()
-    
-    raw_test_ds = tf.data.TFRecordDataset(test_set)
-    test_ds = raw_test_ds.map(data_utils.parse_binary_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-    i = 0
-    for kr00k_file in kr00k_train_files:
-        train_files.append(kr00k_file)
-        random.shuffle(train_files)
-        train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
-        i+=1
-        print('Kr00k files in dataset:', i)
-        
-        raw_train_ds = tf.data.TFRecordDataset(train_set)
-        train_ds = raw_train_ds.map(data_utils.parse_binary_record).shuffle(100000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    dataset_lambda = lambda x : data_utils.create_binary_dataset(x)
 
-        model.fit(train_ds,
-                validation_data = test_ds,
-                epochs=epochs,
-                callbacks = [checkpoint_callback],
-                )
+    if model.built:
+        data_utils.per_attack_test(model, dataset_lambda)
+    else :
+        epochs = 20
+        tfrecords_files = os.listdir(tfrecords_dir)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, val_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
+        val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
+        train_ds = dataset_lambda(train_files)
+        val_ds = dataset_lambda(val_files)
+        
+        history = model.fit(
+            train_ds,
+            validation_data = val_ds,
+            epochs = epochs,
+            callbacks = [checkpoint_callback]
+        )
+        
+        model.summary()
+        print(history.history)
+        data_utils.per_attack_test(model, dataset_lambda)
 
 if __name__ == '__main__':
     main()

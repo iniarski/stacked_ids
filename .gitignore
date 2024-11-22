@@ -3,3 +3,4 @@ dataset/
 saved_models/
 old/
 .ipynb_checkpoints/
+.venv
