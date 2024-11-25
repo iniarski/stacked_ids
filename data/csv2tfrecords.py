@@ -50,8 +50,8 @@ def process_file(file):
 #with ProcessPoolExecutor() as executor:
 #    executor.map(process_file, os.listdir(csv_dir))
 
-csv_dir = 'dataset/AWID2_CSV_preprocessed/test_balanced'
-tfrecord_dir = 'dataset/AWID2_tfrecords/test_balanced'
+csv_dir = 'dataset/AWID2_CSV_preprocessed/train'
+tfrecord_dir = 'dataset/AWID2_tfrecords/train'
 
 #with ProcessPoolExecutor() as executor:
 #   executor.map(process_file, os.listdir(csv_dir))

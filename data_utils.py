@@ -58,7 +58,7 @@ awid3_attacks = [
     'Evil_Twin'
 ]
 
-def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle : bool = True) -> (list[str], list[str]):
+def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle : bool = True, repeat_rare : bool = False) -> (list[str], list[str]):
     test_set = []
     train_set = []
 
@@ -76,6 +76,10 @@ def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle 
             random.shuffle(attack_files)
         test_files = attack_files[:n_test]
         train_files = attack_files[n_test:]
+        if attack_name == 'RogueAP' and repeat_rare:
+            train_files = 3 * train_files
+        if attack_name == 'Krack' and repeat_rare:
+            train_files = 3 * train_files
         for f in test_files:
             test_set.append(f)
         for f in train_files:
@@ -116,13 +120,14 @@ def create_binary_sequential_dataset(
         tfrecords_files : list[str],
         seq_length : int = 32,
         seq_shift : int = 30,
+        batch : bool = True,
         batch_size : int = 32,
         filter_out_normal : bool = True,
         shuffle : bool = True,
         shuffle_buffer : int = 2048
         ) -> tf.data.Dataset :
 
-    raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
+    raw_dataset = tf.data.TFRecordDataset(tfrecords_files, num_parallel_reads=tf.data.AUTOTUNE)
     parsed_dataset = raw_dataset.map(parse_binary_record)
 
     features = parsed_dataset.map(lambda x, y: x)
@@ -139,7 +144,9 @@ def create_binary_sequential_dataset(
         sequence_dataset = sequence_dataset.filter(binary_sequence_has_attack)
     if shuffle:
         sequence_dataset = sequence_dataset.shuffle(shuffle_buffer)
-    sequence_dataset = sequence_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    if batch:
+        sequence_dataset = sequence_dataset.batch(batch_size)
+    sequence_dataset = sequence_dataset.prefetch(tf.data.AUTOTUNE)
 
     return sequence_dataset
 
@@ -147,13 +154,14 @@ def create_multiclass_sequential_dataset(
         tfrecords_files : list[str],
         seq_length : int = 32,
         seq_shift : int = 30,
+        batch : bool = True,
         batch_size : int = 32,
         filter_out_normal : bool = True,
         shuffle : bool = True,
-        shuffle_buffer : int = 2048
+        shuffle_buffer : int = 2048,
         ) -> tf.data.Dataset :
 
-    raw_dataset = tf.data.TFRecordDataset(tfrecords_files)
+    raw_dataset = tf.data.TFRecordDataset(tfrecords_files, num_parallel_reads=tf.data.AUTOTUNE)
     parsed_dataset = raw_dataset.map(parse_multiclass_record)
 
     features = parsed_dataset.map(lambda x, y: x)
@@ -170,7 +178,9 @@ def create_multiclass_sequential_dataset(
         sequence_dataset = sequence_dataset.filter(multiclass_sequence_has_attack)
     if shuffle:
         sequence_dataset = sequence_dataset.shuffle(shuffle_buffer)
-    sequence_dataset = sequence_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    if batch:
+        sequence_dataset = sequence_dataset.batch(batch_size)
+    sequence_dataset = sequence_dataset.prefetch(tf.data.AUTOTUNE)
 
     return sequence_dataset
 
@@ -215,20 +225,10 @@ def step_training(
         increment : float = 0.1
     ):
     test_ds = dataset_callback(test_files)
-
     n_files = n_initial_files
 
     current_train_files = []
     histories = []
-    random.shuffle(test_files)
-    # dividing files to be in evenly distributed
-    per_attack_files = [[f for f in train_files if attack in f] for attack in awid3_attacks]
-    train_files = []
-    while len(per_attack_files) > 0:
-        for attack_files in per_attack_files:
-            random.shuffle(attack_files)
-            train_files.append(attack_files.pop(0))
-        per_attack_files = [af for af in per_attack_files if len(af) > 0]
 
     while len(current_train_files) < len(train_files):
         current_train_files = train_files[:min(len(train_files), n_files)]
@@ -245,7 +245,7 @@ def step_training(
             validation_freq = val_freq,
             callbacks = training_callbacks,
         )
-
+        random.shuffle(train_files)
         histories.append(history.history)
     return histories
 

@@ -91,7 +91,7 @@ Of all the CSV files containing 802.11 Layer II attacks, only those containing a
 
 ### Distribution of attacks in sequential dataset
 
-The data was divded int windows of size Sequence Length, offset by Sequence shift, from the resulting sequences only those were chosen, that contained at least one positive sample
+The data was divded into windows of size Sequence Length, offset by Sequence shift, from the resulting sequences only those were chosen, that contained at least one positive sample
 
 | Sequence length | Sequence shift | Total samples | Attack Samples | Attack % | Normal Samples | Normal % |
 |-----------------|----------------|---------------|----------------|----------|----------------|----------|

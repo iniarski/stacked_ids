@@ -61,20 +61,27 @@ def main():
     model = binary_CNN_GRU_lite_model()
     dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60)
 
-    if not model.built:
+    if model.built:
         dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 15
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files)
+        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, seq_length=64, seq_shift=60, filter_out_normal=False)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
-        validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
-        histories = data_utils.step_training(train_files, validation_files, model, dataset_lambda, training_callbacks=[checkpoint_callback])
-        model.summary()
+        test_files = [os.path.join(tfrecords_dir, f) for f in test_files]
+
+        histories = data_utils.step_training(
+            train_files=train_files,
+            test_files=test_files,
+            model=model,
+            dataset_callback=dataset_lambda,
+            training_callbacks=[checkpoint_callback],
+        )
+
         print(histories)
-        data_utils.per_attack_test(test_files, dataset_lambda)
+
 
 if __name__ == '__main__':
     main()
+

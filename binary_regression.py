@@ -1,12 +1,11 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
+import os
 import data_utils
 from tensorflow.keras.layers import Dense, TimeDistributed, Conv1D, Dropout, Reshape, Input, BatchNormalization, Flatten
 from tensorflow.keras.regularizers import L2
 import random
 
-model_path = 'saved_models/binary_cnn1d.keras'
+model_path = 'saved_models/binary_regression.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
@@ -16,29 +15,18 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     verbose=1
 )
 
-def binary_CNN1D_model(n_features = 39):
+def binary_regression_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
         return model
     else:
         model = tf.keras.models.Sequential([
-        Reshape((1, n_features)),
-        Conv1D(128, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.25),
-        Conv1D(64, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.25),
-        Conv1D(32, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.25),
-        Flatten(),
-        Dense(100, activation='relu', kernel_regularizer=L2(0.01)),
-        Dropout(0.25),
-        Dense(1, activation='sigmoid'),
-        Reshape((None, 1))
+        Dense(1, activation='sigmoid')
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -7,   
+            learning_rate = 10 ** -4,   
         )
 
         model.compile(optimizer=optimizer,
@@ -57,27 +45,30 @@ def main():
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    model = binary_CNN1D_model()
+    model = binary_regression_model()
     dataset_lambda = lambda x : data_utils.create_binary_dataset(x)
 
-    if model.built:
+    if not model.built:
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 20
+        epochs = 10
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
         train_files, val_files = data_utils.train_test_split(train_files, train_ratio)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
-        train_ds = dataset_lambda(train_files)
-        val_ds = dataset_lambda(val_files)
-        
-        history = model.fit(
-            train_ds,
-            validation_data = val_ds,
-            epochs = epochs,
-            callbacks = [checkpoint_callback]
-        )
+        train_files = [os.path.join('dataset/AWID2_tfrecords/train', f) for f in os.listdir('dataset/AWID2_tfrecords/train')]
+        val_files = [os.path.join('dataset/AWID2_tfrecords/test', f) for f in os.listdir('dataset/AWID2_tfrecords/test')]
+        for f in val_files:
+            try:
+                train_ds = dataset_lambda([f])
+                
+                history = model.fit(
+                    train_ds,
+                    epochs = 1,
+                )
+            except Exception:
+                print(f)
         
         model.summary()
         print(history.history)

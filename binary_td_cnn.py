@@ -64,7 +64,7 @@ def main():
     model = binary_time_domain_CNN_model()
     
 
-    if not model.built:
+    if model.built:
         dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
