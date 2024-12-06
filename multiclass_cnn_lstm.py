@@ -2,7 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import data_utils
-from tensorflow.keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropout
+from keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropout
 import random
 
 
@@ -53,38 +53,51 @@ def main():
     random.seed(42)
     import data_utils
 
-
     tfrecords_dir='dataset/AWID3_tfrecords'
-    train_ratio = 0.01
+    balanced_tfrecords_dir='dataset/AWID3_tfrecords_balanced'
+    train_ratio = 0.8
     tfrecords_files = os.listdir(tfrecords_dir)
-    full_train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
-    epochs = 6
-    batch_size = 16
-    histories = []
     model = multiclass_CNN_LSTM_model()
-    
+    dataset_lambda = data_utils.create_multiclass_sequential_dataset
+
     if model.built:
         dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
+        epochs = 3
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=False)
+        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files]
+        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files]
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
+        
+        balanced_train_ds = dataset_lambda(balanced_train_files, seq_length=16, seq_shift=12)
+        balanced_val_ds = dataset_lambda(balanced_validation_files)
+
+        #model.fit(
+        #    balanced_train_ds,
+        #    validation_data = balanced_val_ds,
+        #    epochs=epochs
+        #)
+
         histories = data_utils.step_training(
             train_files, 
             validation_files, 
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=5,
-            n_initial_files=2,
+            epochs_per_step=1,
+            n_initial_files=1,
+            val_freq=1,
+            increment=0.01,
             )
         model.summary()
         print(histories)
-        data_utils.per_attack_test(test_files, dataset_lambda)
+        data_utils.per_attack_test(model, test_files, dataset_lambda)
 
 if __name__ == '__main__':
     main()

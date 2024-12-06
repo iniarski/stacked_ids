@@ -2,6 +2,7 @@ import tensorflow as tf
 import os
 import data_utils
 from tensorflow.keras.layers import LSTM, Dense, TimeDistributed, Conv1D, Dropout, Reshape, Input, BatchNormalization
+from tensorflow.keras.regularizers import L2
 import random
 
 model_path = 'saved_models/binary_dnn.keras'
@@ -9,7 +10,7 @@ model_path = 'saved_models/binary_dnn.keras'
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
     save_best_only=True,
-    monitor='recall',
+    monitor='val_accuracy',
     mode='max',
     verbose=1
 )
@@ -22,22 +23,22 @@ def binary_DNN_model():
     else:
         initializer = tf.keras.initializers.HeUniform()
         model = tf.keras.models.Sequential([
-        Dense(30, activation='relu', kernel_initializer=initializer),
+        Dense(30, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
         BatchNormalization(),
         Dropout(0.25),
-        Dense(20, activation='relu', kernel_initializer=initializer),
+        Dense(20, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
         BatchNormalization(),
         Dropout(0.25),
-        Dense(16, activation='relu', kernel_initializer=initializer),
+        Dense(16, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
         BatchNormalization(),
         Dropout(0.25),
-        Dense(12, activation='relu', kernel_initializer=initializer),
+        Dense(12, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
         BatchNormalization(),
         Dropout(0.25),
-        Dense(6, activation='relu', kernel_initializer=initializer),
+        Dense(6, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
         BatchNormalization(),
         Dropout(0.25),
-        Dense(1, activation='sigmoid', kernel_initializer=initializer)
+        Dense(1, activation='sigmoid', kernel_initializer=initializer, kernel_regularizer=L2(0.01))
       ])
 
         optimizer = tf.keras.optimizers.SGD(
@@ -66,10 +67,10 @@ def main():
     if model.built:
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 30
+        epochs = 20
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, val_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files, val_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
         train_ds = dataset_lambda(train_files)

@@ -52,10 +52,10 @@ awid3_attacks = [
     'Deauth',
     'Disas',
     '(Re)Assoc',
-    'RogueAP',
     'Krack',
     'Kr00k',
-    'Evil_Twin'
+    'Evil_Twin',
+    'RogueAP',
 ]
 
 def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle : bool = True, repeat_rare : bool = False) -> (list[str], list[str]):
@@ -77,6 +77,8 @@ def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle 
         test_files = attack_files[:n_test]
         train_files = attack_files[n_test:]
         if attack_name == 'RogueAP' and repeat_rare:
+            train_files = 10 * train_files
+        if attack_name == '(Re)Assoc' and repeat_rare:
             train_files = 3 * train_files
         if attack_name == 'Krack' and repeat_rare:
             train_files = 3 * train_files
@@ -118,8 +120,8 @@ def multiclass_sequence_has_attack(x, y):
 
 def create_binary_sequential_dataset(
         tfrecords_files : list[str],
-        seq_length : int = 32,
-        seq_shift : int = 30,
+        seq_length : int = 8,
+        seq_shift : int = 2,
         batch : bool = True,
         batch_size : int = 32,
         filter_out_normal : bool = True,
@@ -152,8 +154,8 @@ def create_binary_sequential_dataset(
 
 def create_multiclass_sequential_dataset(
         tfrecords_files : list[str],
-        seq_length : int = 32,
-        seq_shift : int = 30,
+        seq_length : int = 128,
+        seq_shift : int = 120,
         batch : bool = True,
         batch_size : int = 32,
         filter_out_normal : bool = True,
@@ -229,6 +231,12 @@ def step_training(
 
     current_train_files = []
     histories = []
+    per_attack_files = [[f for f in train_files if attack in f] for attack in awid3_attacks]
+    train_files = []
+    while len(per_attack_files) > 0:
+        for files in per_attack_files:
+            train_files.append(files.pop(0))
+        per_attack_files = [files for files in per_attack_files if len(files) > 0]
 
     while len(current_train_files) < len(train_files):
         current_train_files = train_files[:min(len(train_files), n_files)]
@@ -245,7 +253,6 @@ def step_training(
             validation_freq = val_freq,
             callbacks = training_callbacks,
         )
-        random.shuffle(train_files)
         histories.append(history.history)
     return histories
 

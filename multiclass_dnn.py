@@ -1,8 +1,8 @@
 import tensorflow as tf
 import os
 import data_utils
-from tensorflow.keras.layers import Dense, Dropout, BatchNormalization, Reshape
-from tensorflow.keras.regularizers import L2
+from keras.layers import Dense, Dropout, BatchNormalization, Reshape
+from keras.regularizers import L2
 import random
 
 model_path = 'saved_models/multiclass_dnn.keras'
@@ -25,19 +25,19 @@ def multiclass_DNN_model(n_features = 39):
         model = tf.keras.models.Sequential([
         Dense(60, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
         BatchNormalization(),
-        Dropout(0.4),
+        Dropout(0.3),
         Dense(40, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
         BatchNormalization(),
-        Dropout(0.4),
+        Dropout(0.3),
         Dense(32, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
         BatchNormalization(),
-        Dropout(0.4),
+        Dropout(0.3),
         Dense(24, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
         BatchNormalization(),
-        Dropout(0.4),
+        Dropout(0.3),
         Dense(12, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
         BatchNormalization(),
-        Dropout(0.4),
+        Dropout(0.3),
         Dense(3, activation='softmax', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
       ])
 
@@ -68,10 +68,10 @@ def main():
     if model.built:
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 30
+        epochs = 20
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         train_ds = dataset_lambda(train_files)

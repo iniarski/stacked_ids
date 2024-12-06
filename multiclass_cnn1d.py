@@ -65,7 +65,7 @@ def main():
         epochs = 20
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         train_ds = dataset_lambda(train_files)
