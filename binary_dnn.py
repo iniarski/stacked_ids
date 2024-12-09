@@ -21,29 +21,18 @@ def binary_DNN_model():
         print(f"Model loaded from {model_path}")
         return model
     else:
-        initializer = tf.keras.initializers.HeUniform()
         model = tf.keras.models.Sequential([
-        Dense(30, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
+        Dense(32, activation='relu', kernel_regularizer=L2(0.02)),
         BatchNormalization(),
-        Dropout(0.25),
-        Dense(20, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
+        Dropout(0.2),
+        Dense(16, activation='relu', kernel_regularizer=L2(0.02)),
         BatchNormalization(),
-        Dropout(0.25),
-        Dense(16, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
-        BatchNormalization(),
-        Dropout(0.25),
-        Dense(12, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
-        BatchNormalization(),
-        Dropout(0.25),
-        Dense(6, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.01)),
-        BatchNormalization(),
-        Dropout(0.25),
-        Dense(1, activation='sigmoid', kernel_initializer=initializer, kernel_regularizer=L2(0.01))
+        Dropout(0.2),
+        Dense(1, activation='sigmoid', kernel_regularizer=L2(0.02))
       ])
 
-        optimizer = tf.keras.optimizers.SGD(
-            learning_rate = 0.01,   
-            momentum = 0.9
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate = 0.001,   
         )
 
         model.compile(optimizer=optimizer,
@@ -69,8 +58,7 @@ def main():
     else :
         epochs = 20
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, val_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
+        train_files, val_files, = data_utils.train_test_split(tfrecords_files, train_ratio, repeat_rare=True)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
         train_ds = dataset_lambda(train_files)

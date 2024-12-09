@@ -21,29 +21,18 @@ def multiclass_DNN_model(n_features = 39):
         print(f"Model loaded from {model_path}")
         return model
     else:
-        initializer = tf.keras.initializers.HeUniform()
         model = tf.keras.models.Sequential([
-        Dense(60, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
+        Dense(32, activation='relu', kernel_regularizer=L2(0.02), bias_regularizer=L2(0.02)),
         BatchNormalization(),
-        Dropout(0.3),
-        Dense(40, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
+        Dropout(0.4),
+        Dense(16, activation='relu', kernel_regularizer=L2(0.02), bias_regularizer=L2(0.02)),
         BatchNormalization(),
-        Dropout(0.3),
-        Dense(32, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
-        BatchNormalization(),
-        Dropout(0.3),
-        Dense(24, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
-        BatchNormalization(),
-        Dropout(0.3),
-        Dense(12, activation='relu', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
-        BatchNormalization(),
-        Dropout(0.3),
-        Dense(3, activation='softmax', kernel_initializer=initializer, kernel_regularizer=L2(0.04)),
+        Dropout(0.4),
+        Dense(3, activation='softmax', kernel_regularizer=L2(0.02), bias_regularizer=L2(0.02)),
       ])
 
-        optimizer = tf.keras.optimizers.SGD(
-            learning_rate = 10 ** -2,   
-            momentum = 0.9
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate = 10 ** -5,   
         )
 
         model.compile(optimizer=optimizer,

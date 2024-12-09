@@ -52,10 +52,10 @@ awid3_attacks = [
     'Deauth',
     'Disas',
     '(Re)Assoc',
+    'RogueAP',
     'Krack',
     'Kr00k',
     'Evil_Twin',
-    'RogueAP',
 ]
 
 def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle : bool = True, repeat_rare : bool = False) -> (list[str], list[str]):
@@ -77,10 +77,8 @@ def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle 
         test_files = attack_files[:n_test]
         train_files = attack_files[n_test:]
         if attack_name == 'RogueAP' and repeat_rare:
-            train_files = 10 * train_files
-        if attack_name == '(Re)Assoc' and repeat_rare:
             train_files = 3 * train_files
-        if attack_name == 'Krack' and repeat_rare:
+        if attack_name == '(Re)Assoc' and repeat_rare:
             train_files = 3 * train_files
         for f in test_files:
             test_set.append(f)
@@ -120,8 +118,8 @@ def multiclass_sequence_has_attack(x, y):
 
 def create_binary_sequential_dataset(
         tfrecords_files : list[str],
-        seq_length : int = 8,
-        seq_shift : int = 2,
+        seq_length : int = 128,
+        seq_shift : int = 120,
         batch : bool = True,
         batch_size : int = 32,
         filter_out_normal : bool = True,

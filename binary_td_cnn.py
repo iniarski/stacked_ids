@@ -2,7 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import data_utils
-from keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout, Reshape, AveragePooling1D, MaxPooling1D
+from keras.layers import GRU, Dense, TimeDistributed, Conv1D, Dropout, Reshape, BatchNormalization, Input
 import random
 
 
@@ -16,35 +16,28 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     verbose=1
 )
 
-def binary_time_domain_CNN_model():
+def binary_time_domain_CNN_model(n_features=39):
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(128, 1, activation='relu', padding='same'),
-        #MaxPooling1D(pool_size=2, padding='same', strides=1),
-        Dropout(0.2),
-        Conv1D(64, 3, activation='relu', padding='same'),
-        #MaxPooling1D(pool_size=2, padding='same', strides=1),
-        Dropout(0.2),
         Conv1D(32, 5, activation='relu', padding='same'),
-        #MaxPooling1D(pool_size=2, padding='same', strides=1),
+        BatchNormalization(),
         Dropout(0.2),
-        TimeDistributed(Dense(32, activation='relu')),
-        TimeDistributed(Dense(1, activation='sigmoid')),
-        TimeDistributed(Reshape((1, )))
+        Conv1D(16, 7, activation='relu', padding='same'),
+        BatchNormalization(),
+        Dropout(0.2),
+        TimeDistributed(Dense(1, activation='sigmoid'), name='td_output')
       ])
         
         loss = tf.keras.losses.BinaryFocalCrossentropy(
-        #    apply_class_balancing=True,
-        #    alpha=0.9,
             gamma=2
         )
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -5
+            learning_rate = 10 ** -3
         )
 
 
@@ -58,7 +51,8 @@ def binary_time_domain_CNN_model():
 def main():
     random.seed(42)
     import data_utils
-
+    tf.config.run_functions_eagerly(True)
+    
     tfrecords_dir='dataset/AWID3_tfrecords'
     balanced_tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
@@ -68,7 +62,7 @@ def main():
     model = binary_time_domain_CNN_model()
     dataset_lambda = data_utils.create_binary_sequential_dataset
 
-    if model.built:
+    if os.path.exists(model_path):
         dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
@@ -81,7 +75,7 @@ def main():
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         
-        balanced_train_ds = dataset_lambda(balanced_train_files, seq_length=16, seq_shift=12)
+        balanced_train_ds = dataset_lambda(balanced_train_files)
         balanced_val_ds = dataset_lambda(balanced_validation_files)
 
         model.fit(
@@ -96,10 +90,10 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=2,
-            n_initial_files=5,
-            val_freq=2,
-            increment=0.25,
+            epochs_per_step=3,
+            n_initial_files=7,
+            val_freq=3,
+            increment=0.5,
             )
         model.summary()
         print(histories)

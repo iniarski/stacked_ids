@@ -17,12 +17,7 @@ def process_csv_files(files, categorical_columns, numerical_columns):
     
     for file in files:
         try:
-            df = pd.read_csv(file, names=awid2_cols, usecols=awid2_usecols)
-            df.rename(
-                columns=awid2_rename,
-                #columns=parse_column_name,
-                inplace=True
-            )
+            df = pd.read_csv(file, low_memory=False)
             
             for col in categorical_columns:
                 if col in df.columns:
@@ -70,13 +65,9 @@ def process_csv_files(files, categorical_columns, numerical_columns):
         print(f'| {col}  | {mean:.4f}  | {_min:.4f}  | {var:.4f}  | {q25:.4f}  | {q50:.4f}  | {q75:.4f}  | {_max:.4f}  |')
 
 if __name__ == "__main__":
-    csv_dir = 'dataset/AWID2/AWID-CLS-F-Trn'
+    csv_dir = 'dataset/AWID3_CSV_raw'
     files = os.listdir(csv_dir)
-    from random import shuffle
-    shuffle(files)
-    files = files[:len(files) // 5]
-    paths = [os.path.join(csv_dir, f) for f in files]
-    
+
     categorical_columns = [
     'wlan.fc.type',
     'wlan.fc.subtype',
@@ -98,9 +89,22 @@ if __name__ == "__main__":
     'radiotap.dbm_antsignal',
     ]
     
-    process_csv_files(paths, categorical_columns, numerical_columns)
-
-
+    awid3_attacks = [
+    'Deauth',
+    'Disas',
+    '(Re)Assoc',
+    'Krack',
+    'Kr00k',
+    'Evil_Twin',
+    'RogueAP',
+    ]
+    
+    for attack in awid3_attacks:
+        print(attack)
+        attack_files = [f for f in files if f.startswith(attack)]
+        paths = [os.path.join(csv_dir, f) for f in attack_files]
+        process_csv_files(paths, categorical_columns, numerical_columns)
+    
     
     
     

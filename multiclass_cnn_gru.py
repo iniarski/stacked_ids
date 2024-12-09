@@ -34,13 +34,11 @@ def multiclass_CNN_GRU_model():
       ])
 
         loss = tf.keras.losses.CategoricalFocalCrossentropy(
-            #apply_class_balancing=True,
-            #alpha=0.8,
-            gamma=1.8
+            gamma=2
         )
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -4
+            learning_rate = 10 ** -4,
         )
 
 
@@ -52,42 +50,53 @@ def multiclass_CNN_GRU_model():
         return model
 
 def main():
-    random.seed(42)
-    import data_utils
-
-
-def main():
-    random.seed(42)
     import data_utils
 
     tfrecords_dir='dataset/AWID3_tfrecords'
+    balanced_tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
-
+    tfrecords_files = os.listdir(tfrecords_dir)
+    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
     model = multiclass_CNN_GRU_model()
-    dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, seq_length=64, seq_shift=60)
+    dataset_lambda = data_utils.create_multiclass_sequential_dataset
 
     if model.built:
         dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
+        epochs = 3
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, seq_length=32, seq_shift=20, filter_out_normal=True)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
+        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files]
+        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files]
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
-        test_files = [os.path.join(tfrecords_dir, f) for f in test_files]
+        validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
+        
+        balanced_train_ds = dataset_lambda(balanced_train_files, seq_length=16, seq_shift=12)
+        balanced_val_ds = dataset_lambda(balanced_validation_files)
 
-        histories = data_utils.step_training(
-            train_files=train_files,
-            test_files=test_files,
-            model=model,
-            dataset_callback=dataset_lambda,
-            training_callbacks=[checkpoint_callback],
+        model.fit(
+            balanced_train_ds,
+            validation_data = balanced_val_ds,
+            epochs=epochs
         )
 
+        histories = data_utils.step_training(
+            train_files, 
+            validation_files, 
+            model, 
+            dataset_lambda, 
+            training_callbacks=[checkpoint_callback],
+            epochs_per_step=3,
+            n_initial_files=7,
+            val_freq=3,
+            increment=0.5,
+            )
+        model.summary()
         print(histories)
-
+        data_utils.per_attack_test(model, test_files, dataset_lambda)
 
 if __name__ == '__main__':
     main()
-

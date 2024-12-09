@@ -24,20 +24,23 @@ def multiclass_CNN1D_model(n_features = 39):
     else:
         model = tf.keras.models.Sequential([
         Reshape((1, n_features)),
-        Conv1D(256, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.5),
-        Conv1D(128, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.5),
-        Conv1D(64, 1, activation='relu', padding='same', strides=1),
-        Dropout(0.5),
+        Conv1D(32, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        BatchNormalization(),
+        Dropout(0.25),
+        Conv1D(24, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        BatchNormalization(),
+        Dropout(0.25),
+        Conv1D(16, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        BatchNormalization(),
+        Dropout(0.25),
         Flatten(),
-        Dense(100, activation='relu', kernel_regularizer=L2(0.01)),
-        Dropout(0.5),
+        Dense(12, activation='relu', kernel_regularizer=L2(0.01)),
+        Dropout(0.25),
         Dense(3, activation='softmax')
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -6,
+            learning_rate = 10 ** -4,
         )
 
         model.compile(optimizer=optimizer,

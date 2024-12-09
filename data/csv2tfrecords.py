@@ -6,8 +6,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 tf.config.experimental.set_visible_devices([], 'GPU')
 
-csv_dir = 'dataset/AWID2_CSV_preprocessed/test'
-tfrecord_dir = 'dataset/AWID2_tfrecords/test'
+csv_dir = 'dataset/AWID3_CSV_preprocessed'
+tfrecord_dir = 'dataset/AWID3_tfrecords'
 os.makedirs(tfrecord_dir, exist_ok=True)
 column_names = []
 
@@ -50,11 +50,11 @@ def process_file(file):
 #with ProcessPoolExecutor() as executor:
 #    executor.map(process_file, os.listdir(csv_dir))
 
-csv_dir = 'dataset/AWID2_CSV_preprocessed/train'
-tfrecord_dir = 'dataset/AWID2_tfrecords/train'
+#csv_dir = 'dataset/AWID2_CSV_preprocessed/train'
+#tfrecord_dir = 'dataset/AWID2_tfrecords/train'
 
-#with ProcessPoolExecutor() as executor:
-#   executor.map(process_file, os.listdir(csv_dir))
+with ProcessPoolExecutor() as executor:
+   executor.map(process_file, os.listdir(csv_dir))
 
 for file in os.listdir(csv_dir):
     process_file(file)

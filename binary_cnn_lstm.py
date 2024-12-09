@@ -24,28 +24,24 @@ def binary_CNN_LSTM_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(128, 1, activation='relu', padding='same'),
-        Dropout(0.2),
-        LSTM(64, activation='tanh', return_sequences=True, kernel_regularizer=L2(0.01)),
-        TimeDistributed(Dropout(0.2)),
+        Conv1D(32, 1, activation='relu', padding='same'),
+        Conv1D(24, 1, activation='relu', padding='same'),
+        LSTM(16, activation='tanh', return_sequences=True, kernel_regularizer=L2(0.01)),
         TimeDistributed(
-            Dense(32, activation='relu', kernel_regularizer=L2(0.01)),
+            Dense(8, activation='relu', kernel_regularizer=L2(0.01)),
             name='td_dense'),
-        Dropout(0.2),
         TimeDistributed(
-            Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01)),
+            Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01), bias_regularizer=L2(0.01)),
             name='td_output'),
       ])
         
         
-        optimizer = tf.keras.optimizers.RMSprop(
-            learning_rate = 10 ** -4
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate = 10 ** -3,
         )
 
-        loss = tf.keras.losses.BinaryCrossentropy(
-            #apply_class_balancing = True,
-            #alpha = 0.85,
-            #gamma = 2
+        loss = tf.keras.losses.BinaryFocalCrossentropy(
+            gamma = 2.5
         )
 
         model.compile(optimizer=optimizer,
@@ -56,7 +52,6 @@ def binary_CNN_LSTM_model():
         return model
 
 def main():
-    random.seed(42)
     import data_utils
 
     tfrecords_dir='dataset/AWID3_tfrecords'
@@ -81,13 +76,14 @@ def main():
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         
-        balanced_train_ds = dataset_lambda(balanced_train_files, seq_length=16, seq_shift=12)
+        balanced_train_ds = dataset_lambda(balanced_train_files)
         balanced_val_ds = dataset_lambda(balanced_validation_files)
 
         model.fit(
             balanced_train_ds,
             validation_data = balanced_val_ds,
-            epochs=epochs
+            epochs=epochs,
+            validation_freq=epochs
         )
 
         histories = data_utils.step_training(
@@ -96,10 +92,10 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=2,
-            n_initial_files=6,
-            val_freq=2,
-            increment=0.25,
+            epochs_per_step=3,
+            n_initial_files=10,
+            val_freq=3,
+            increment=0.1,
             )
         model.summary()
         print(histories)

@@ -24,20 +24,24 @@ def binary_CNN1D_model(n_features = 39):
     else:
         model = tf.keras.models.Sequential([
         Reshape((1, n_features)),
-        Conv1D(128, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        Conv1D(24, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        BatchNormalization(),
         Dropout(0.25),
-        Conv1D(64, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        Conv1D(16, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        BatchNormalization(),
         Dropout(0.25),
-        Conv1D(32, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        Conv1D(12, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        BatchNormalization(),
         Dropout(0.25),
         Flatten(),
-        Dense(100, activation='relu', kernel_regularizer=L2(0.01)),
+        Dense(8, activation='relu', kernel_regularizer=L2(0.01)),
+        BatchNormalization(),
         Dropout(0.25),
         Dense(1, activation='sigmoid'),
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -6,   
+            learning_rate = 10 ** -5,   
         )
 
         model.compile(optimizer=optimizer,
