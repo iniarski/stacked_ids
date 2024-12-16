@@ -23,13 +23,13 @@ def multiclass_CNN_GRU_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(64, 1, activation='relu', padding='same'),
+        Conv1D(48, 1, activation='relu', padding='same'),
         Dropout(0.2),
         Conv1D(32, 1, activation='relu', padding='same'),
         Dropout(0.2),
-        GRU(48, return_sequences=True),
+        GRU(24, return_sequences=True),
         Dropout(0.2),
-        TimeDistributed(Dense(32, activation='relu')),
+        TimeDistributed(Dense(12, activation='relu')),
         TimeDistributed(Dense(3, activation='softmax')),
       ])
 
@@ -68,13 +68,13 @@ def main():
         epochs = 3
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
         balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files]
         balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files]
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         
-        balanced_train_ds = dataset_lambda(balanced_train_files, seq_length=16, seq_shift=12)
+        balanced_train_ds = dataset_lambda(balanced_train_files)
         balanced_val_ds = dataset_lambda(balanced_validation_files)
 
         model.fit(
@@ -92,7 +92,7 @@ def main():
             epochs_per_step=3,
             n_initial_files=7,
             val_freq=3,
-            increment=0.5,
+            increment=0.25,
             )
         model.summary()
         print(histories)

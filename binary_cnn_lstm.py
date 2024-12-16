@@ -24,9 +24,9 @@ def binary_CNN_LSTM_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(32, 1, activation='relu', padding='same'),
         Conv1D(24, 1, activation='relu', padding='same'),
-        LSTM(16, activation='tanh', return_sequences=True, kernel_regularizer=L2(0.01)),
+        Conv1D(16, 1, activation='relu', padding='same'),
+        LSTM(12, activation='tanh', return_sequences=True, kernel_regularizer=L2(0.01)),
         TimeDistributed(
             Dense(8, activation='relu', kernel_regularizer=L2(0.01)),
             name='td_dense'),
@@ -41,7 +41,7 @@ def binary_CNN_LSTM_model():
         )
 
         loss = tf.keras.losses.BinaryFocalCrossentropy(
-            gamma = 2.5
+            gamma = 2
         )
 
         model.compile(optimizer=optimizer,
@@ -67,10 +67,10 @@ def main():
         dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 3
+        epochs = 5
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
+        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
         balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files]
         balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files]
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
@@ -93,9 +93,9 @@ def main():
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
             epochs_per_step=3,
-            n_initial_files=10,
+            n_initial_files=7,
             val_freq=3,
-            increment=0.1,
+            increment=0.2,
             )
         model.summary()
         print(histories)

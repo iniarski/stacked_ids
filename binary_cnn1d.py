@@ -23,7 +23,7 @@ def binary_CNN1D_model(n_features = 39):
         return model
     else:
         model = tf.keras.models.Sequential([
-        Reshape((1, n_features)),
+        Reshape((n_features, 1)),
         Conv1D(24, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
         BatchNormalization(),
         Dropout(0.25),
@@ -41,11 +41,11 @@ def binary_CNN1D_model(n_features = 39):
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -5,   
+            learning_rate = 10 ** -3,   
         )
 
         model.compile(optimizer=optimizer,
-                    loss='binary_crossentropy',
+                    loss='binary_focal_crossentropy',
                     metrics=['accuracy', 'precision', 'recall']
                     )
 
@@ -61,7 +61,7 @@ def main():
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
     model = binary_CNN1D_model()
-    dataset_lambda = lambda x : data_utils.create_binary_dataset(x)
+    dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, batch=False)
 
     if model.built:
         data_utils.per_attack_test(model, dataset_lambda)
@@ -70,6 +70,7 @@ def main():
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
         train_files, val_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
+        train_files.sort()
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
         train_ds = dataset_lambda(train_files)

@@ -77,9 +77,9 @@ def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle 
         test_files = attack_files[:n_test]
         train_files = attack_files[n_test:]
         if attack_name == 'RogueAP' and repeat_rare:
-            train_files = 3 * train_files
+            train_files = 10 * train_files
         if attack_name == '(Re)Assoc' and repeat_rare:
-            train_files = 3 * train_files
+            train_files = 5 * train_files
         for f in test_files:
             test_set.append(f)
         for f in train_files:
@@ -107,11 +107,9 @@ def parse_multiclass_record(example_proto):
     features = tf.stack(list(parsed_features.values()))
     return features, label
 
-@tf.function
 def binary_sequence_has_attack(x, y):
     return tf.math.not_equal(tf.reduce_max(y), 0)
 
-@tf.function
 def multiclass_sequence_has_attack(x, y):
     reduced  = tf.math.equal(tf.reduce_max(y, axis=0), tf.ones((3, )))
     return tf.math.logical_or(reduced[1], reduced[2])
@@ -119,9 +117,9 @@ def multiclass_sequence_has_attack(x, y):
 def create_binary_sequential_dataset(
         tfrecords_files : list[str],
         seq_length : int = 128,
-        seq_shift : int = 120,
+        seq_shift : int = 119,
         batch : bool = True,
-        batch_size : int = 32,
+        batch_size : int = 16,
         filter_out_normal : bool = True,
         shuffle : bool = True,
         shuffle_buffer : int = 2048
@@ -153,9 +151,9 @@ def create_binary_sequential_dataset(
 def create_multiclass_sequential_dataset(
         tfrecords_files : list[str],
         seq_length : int = 128,
-        seq_shift : int = 120,
+        seq_shift : int = 119,
         batch : bool = True,
-        batch_size : int = 32,
+        batch_size : int = 16,
         filter_out_normal : bool = True,
         shuffle : bool = True,
         shuffle_buffer : int = 2048,

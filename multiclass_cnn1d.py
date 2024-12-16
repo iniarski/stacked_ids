@@ -23,7 +23,7 @@ def multiclass_CNN1D_model(n_features = 39):
         return model
     else:
         model = tf.keras.models.Sequential([
-        Reshape((1, n_features)),
+        Reshape((n_features, 1)),
         Conv1D(32, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
         BatchNormalization(),
         Dropout(0.25),
