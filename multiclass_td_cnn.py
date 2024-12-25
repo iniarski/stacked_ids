@@ -23,11 +23,16 @@ def multiclass_time_domain_CNN_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(32, 5, activation='relu', padding='same'),
+        Conv1D(32, 3, activation='relu', padding='same'),
         BatchNormalization(),
         Dropout(0.2),
-        Conv1D(16, 7, activation='relu', padding='same'),
+        Conv1D(16, 5, activation='relu', padding='same'),
         BatchNormalization(),
+        Dropout(0.2),
+        Conv1D(8, 7, activation='relu', padding='same'),
+        BatchNormalization(),
+        Dropout(0.2),
+        TimeDistributed(Dense(4, activation='relu'), name='td_dense'),
         Dropout(0.2),
         TimeDistributed(Dense(3, activation='softmax')),
       ])
@@ -50,7 +55,7 @@ def multiclass_time_domain_CNN_model():
 
 def main():
     import data_utils
-    tf.config.run_functions_eagerly(True)
+    #tf.config.run_functions_eagerly(True)
 
     tfrecords_dir='dataset/AWID3_tfrecords'
     balanced_tfrecords_dir='dataset/AWID3_tfrecords_balanced'
@@ -65,18 +70,18 @@ def main():
         dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 3
+        epochs = 6
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
-        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files]
-        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files]
+        train_files1, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files1, train_ratio)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         
+        train_files1, validation_files1 = data_utils.train_test_split(train_files1, train_ratio, repeat_rare=True)
+        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files1]
+        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files1]
         balanced_train_ds = dataset_lambda(balanced_train_files)
         balanced_val_ds = dataset_lambda(balanced_validation_files)
-
         model.fit(
             balanced_train_ds,
             validation_data = balanced_val_ds,
@@ -89,9 +94,9 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=3,
+            epochs_per_step=2,
             n_initial_files=10,
-            val_freq=3,
+            val_freq=2,
             increment=0.2,
             )
         model.summary()

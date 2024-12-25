@@ -23,13 +23,14 @@ def multiclass_CNN_GRU_model():
         return model
     else:
         model = tf.keras.models.Sequential([
+        Conv1D(64, 1, activation='relu', padding='same'),
+        Dropout(0.2),
         Conv1D(48, 1, activation='relu', padding='same'),
         Dropout(0.2),
-        Conv1D(32, 1, activation='relu', padding='same'),
+        GRU(32, return_sequences=True),
         Dropout(0.2),
-        GRU(24, return_sequences=True),
+        TimeDistributed(Dense(16, activation='relu')),
         Dropout(0.2),
-        TimeDistributed(Dense(12, activation='relu')),
         TimeDistributed(Dense(3, activation='softmax')),
       ])
 
@@ -38,7 +39,7 @@ def multiclass_CNN_GRU_model():
         )
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -4,
+            learning_rate = 10 ** -3,
         )
 
 
@@ -65,15 +66,16 @@ def main():
         dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 3
+        epochs = 5
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
-        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files]
-        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files]
+        train_files1, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files1, train_ratio)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         
+        train_files1, validation_files1 = data_utils.train_test_split(train_files1, train_ratio, repeat_rare=True)
+        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files1]
+        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files1]
         balanced_train_ds = dataset_lambda(balanced_train_files)
         balanced_val_ds = dataset_lambda(balanced_validation_files)
 

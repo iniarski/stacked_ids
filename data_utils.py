@@ -236,7 +236,8 @@ def step_training(
 
     while len(current_train_files) < len(train_files):
         current_train_files = train_files[:min(len(train_files), n_files)]
-        random.shuffle(current_train_files)
+        #random.shuffle(current_train_files)
+        current_train_files.sort()
         for file in current_train_files:
             print(file.split('/')[-1].split('.')[0], end=',')
         print()

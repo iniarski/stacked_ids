@@ -24,14 +24,14 @@ def binary_CNN_LSTM_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(24, 1, activation='relu', padding='same'),
-        Conv1D(16, 1, activation='relu', padding='same'),
-        LSTM(12, activation='tanh', return_sequences=True, kernel_regularizer=L2(0.01)),
+        Conv1D(64, 1, activation='relu', padding='same'),
+        Conv1D(48, 1, activation='relu', padding='same'),
+        LSTM(32, activation='tanh', return_sequences=True),
         TimeDistributed(
-            Dense(8, activation='relu', kernel_regularizer=L2(0.01)),
+            Dense(16, activation='relu'),
             name='td_dense'),
         TimeDistributed(
-            Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01), bias_regularizer=L2(0.01)),
+            Dense(1, activation='sigmoid'),
             name='td_output'),
       ])
         
@@ -69,15 +69,17 @@ def main():
     else :
         epochs = 5
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
-        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files]
-        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files]
+        train_files1, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files1, train_ratio)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         
+        train_files1, validation_files1 = data_utils.train_test_split(train_files1, train_ratio, repeat_rare=True)
+        balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files1]
+        balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files1]
         balanced_train_ds = dataset_lambda(balanced_train_files)
         balanced_val_ds = dataset_lambda(balanced_validation_files)
+
 
         model.fit(
             balanced_train_ds,
@@ -92,9 +94,9 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=3,
+            epochs_per_step=2,
             n_initial_files=7,
-            val_freq=3,
+            val_freq=2,
             increment=0.2,
             )
         model.summary()
