@@ -23,13 +23,19 @@ def multiclass_CNN_LSTM_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(32, 1, activation='relu', padding='same'),
-        Conv1D(24, 1, activation='relu', padding='same'),
-        LSTM(16, activation='tanh', return_sequences=True),
-        TimeDistributed(Dropout(0.2)),
-        TimeDistributed(Dense(8, activation='relu')),
-        TimeDistributed(Dropout(0.2)),
-        TimeDistributed(Dense(3, activation='softmax')),
+        Conv1D(96, 1, activation='relu', padding='same'),
+        Dropout(0.15),
+        Conv1D(64, 1, activation='relu', padding='same'),
+        Dropout(0.15),
+        LSTM(48, activation='tanh', return_sequences=True),
+        Dropout(0.15),
+        TimeDistributed(
+            Dense(32, activation='relu'),
+            name='td_dense'),
+        Dropout(0.15),
+        TimeDistributed(
+            Dense(3, activation='softmax'),
+            name='td_output'),
       ])
 
         optimizer = tf.keras.optimizers.Adam(
@@ -56,13 +62,13 @@ def main():
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
     model = multiclass_CNN_LSTM_model()
-    dataset_lambda = data_utils.create_multiclass_sequential_dataset
+    dataset_lambda = lambda x: data_utils.create_multiclass_sequential_dataset(x)
 
     if model.built:
         dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 3
+        epochs = 0
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
         train_files, validation_files = data_utils.train_test_split(train_files, train_ratio)
@@ -86,10 +92,10 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=3,
-            n_initial_files=10,
-            val_freq=3,
-            increment=0.25,
+            epochs_per_step=1,
+            n_initial_files=7,
+            val_freq=1,
+            increment=0.1,
             )
         model.summary()
         print(histories)

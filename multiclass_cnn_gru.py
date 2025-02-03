@@ -23,16 +23,21 @@ def multiclass_CNN_GRU_model():
         return model
     else:
         model = tf.keras.models.Sequential([
+        Conv1D(96, 1, activation='relu', padding='same'),
+        Dropout(0.15),
         Conv1D(64, 1, activation='relu', padding='same'),
-        Dropout(0.2),
-        Conv1D(48, 1, activation='relu', padding='same'),
-        Dropout(0.2),
-        GRU(32, return_sequences=True),
-        Dropout(0.2),
-        TimeDistributed(Dense(16, activation='relu')),
-        Dropout(0.2),
-        TimeDistributed(Dense(3, activation='softmax')),
+        Dropout(0.15),
+        GRU(48, activation='tanh', return_sequences=True),
+        Dropout(0.15),
+        TimeDistributed(
+            Dense(32, activation='relu'),
+            name='td_dense'),
+        Dropout(0.15),
+        TimeDistributed(
+            Dense(3, activation='softmax'),
+            name='td_output'),
       ])
+
 
         loss = tf.keras.losses.CategoricalFocalCrossentropy(
             gamma=2
@@ -60,13 +65,13 @@ def main():
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
     model = multiclass_CNN_GRU_model()
-    dataset_lambda = data_utils.create_multiclass_sequential_dataset
+    dataset_lambda = lambda x: data_utils.create_multiclass_sequential_dataset(x, batch_size=4, shuffle_buffer=4096)
 
     if model.built:
         dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 5
+        epochs = 7
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files1, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
         train_files, validation_files = data_utils.train_test_split(train_files1, train_ratio)
@@ -82,7 +87,8 @@ def main():
         model.fit(
             balanced_train_ds,
             validation_data = balanced_val_ds,
-            epochs=epochs
+            epochs=epochs,
+            validation_freq=epochs
         )
 
         histories = data_utils.step_training(
@@ -91,10 +97,10 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=3,
+            epochs_per_step=1,
             n_initial_files=7,
-            val_freq=3,
-            increment=0.25,
+            val_freq=1,
+            increment=0.1,
             )
         model.summary()
         print(histories)

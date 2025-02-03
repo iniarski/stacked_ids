@@ -24,28 +24,25 @@ def binary_CNN1D_model(n_features = 39):
     else:
         model = tf.keras.models.Sequential([
         Reshape((1, n_features)),
-        Conv1D(24, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        Conv1D(32, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01), bias_regularizer=L2(0.01)),
         BatchNormalization(),
-        Dropout(0.25),
-        Conv1D(16, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
+        Dropout(0.3),
+        Conv1D(16, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01), bias_regularizer=L2(0.01)),
         BatchNormalization(),
-        Dropout(0.25),
-        Conv1D(12, 1, activation='relu', padding='same', strides=1, kernel_regularizer=L2(0.01)),
-        BatchNormalization(),
-        Dropout(0.25),
+        Dropout(0.3),
         Flatten(),
-        Dense(8, activation='relu', kernel_regularizer=L2(0.01)),
+        Dense(16, activation='relu', kernel_regularizer=L2(0.01), bias_regularizer=L2(0.01)),
         BatchNormalization(),
-        Dropout(0.25),
-        Dense(1, activation='sigmoid'),
+        Dropout(0.3),
+        Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01), bias_regularizer=L2(0.01)),
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -3,   
+            learning_rate = 10 ** -5,   
         )
 
         model.compile(optimizer=optimizer,
-                    loss='binary_focal_crossentropy',
+                    loss='binary_crossentropy',
                     metrics=['accuracy', 'precision', 'recall']
                     )
 
@@ -57,6 +54,7 @@ def main():
 
     tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
+    val_ratio = 0.75
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
@@ -69,8 +67,7 @@ def main():
         epochs = 20
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, val_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
-        train_files.sort()
+        train_files, val_files = data_utils.train_test_split(train_files, val_ratio, repeat_rare=False)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
         train_ds = dataset_lambda(train_files)

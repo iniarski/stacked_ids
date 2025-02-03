@@ -77,9 +77,9 @@ def train_test_split(file_names : list[str], train_ratio : float = 0.8, shuffle 
         test_files = attack_files[:n_test]
         train_files = attack_files[n_test:]
         if attack_name == 'RogueAP' and repeat_rare:
-            train_files = 10 * train_files
-        if attack_name == '(Re)Assoc' and repeat_rare:
             train_files = 5 * train_files
+        if attack_name == 'Krack' and repeat_rare:
+            train_files = 2 * train_files
         for f in test_files:
             test_set.append(f)
         for f in train_files:
@@ -99,6 +99,18 @@ def parse_binary_record(example_proto):
     features = tf.stack(list(parsed_features.values()))
     return features, tf.reshape(label,(1,))
 
+def parse_binary_record_nonohe(example_proto):
+    parsed_features = tf.io.parse_single_example(example_proto, feature_description)
+    label = parsed_features.pop('Label')
+    label = 0 if label == 0 else 1
+    features = list(parsed_features.values())
+    type = tf.cast(tf.argmax(features[5:8]), tf.float32) / 2.0
+    subtype = tf.cast(tf.argmax(features[8:24]), tf.float32) / 15.0
+    ds = tf.cast(tf.argmax(features[24:28]), tf.float32) / 3.0
+    features = features[:5] + [type, subtype, ds] + features[28:]
+    features = tf.stack(features)
+    return features, tf.reshape(label,(1,))
+
 def parse_multiclass_record(example_proto):
     parsed_features = tf.io.parse_single_example(example_proto, feature_description)
     label = parsed_features.pop('Label')
@@ -116,13 +128,13 @@ def multiclass_sequence_has_attack(x, y):
 
 def create_binary_sequential_dataset(
         tfrecords_files : list[str],
-        seq_length : int = 128,
-        seq_shift : int = 119,
+        seq_length : int = 64,
+        seq_shift : int = 59,
         batch : bool = True,
-        batch_size : int = 16,
+        batch_size : int = 32,
         filter_out_normal : bool = True,
         shuffle : bool = True,
-        shuffle_buffer : int = 2048
+        shuffle_buffer : int = 512
         ) -> tf.data.Dataset :
 
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files, num_parallel_reads=tf.data.AUTOTUNE)
@@ -148,15 +160,49 @@ def create_binary_sequential_dataset(
 
     return sequence_dataset
 
-def create_multiclass_sequential_dataset(
+def create_binary_sequential_dataset_nonohe(
         tfrecords_files : list[str],
-        seq_length : int = 128,
-        seq_shift : int = 119,
+        seq_length : int = 64,
+        seq_shift : int = 59,
         batch : bool = True,
-        batch_size : int = 16,
+        batch_size : int = 32,
         filter_out_normal : bool = True,
         shuffle : bool = True,
-        shuffle_buffer : int = 2048,
+        shuffle_buffer : int = 512
+        ) -> tf.data.Dataset :
+
+    raw_dataset = tf.data.TFRecordDataset(tfrecords_files, num_parallel_reads=tf.data.AUTOTUNE)
+    parsed_dataset = raw_dataset.map(parse_binary_record_nonohe)
+
+    features = parsed_dataset.map(lambda x, y: x)
+    labels = parsed_dataset.map(lambda x, y: y)
+
+    feature_sequences = features.window(size=seq_length, shift=seq_shift, drop_remainder=True)
+    label_sequences = labels.window(size=seq_length, shift=seq_shift, drop_remainder=True)
+
+    feature_sequences = feature_sequences.flat_map(lambda x: x.batch(seq_length))
+    label_sequences = label_sequences.flat_map(lambda x: x.batch(seq_length))
+
+    sequence_dataset = tf.data.Dataset.zip((feature_sequences, label_sequences))
+    if filter_out_normal:
+        sequence_dataset = sequence_dataset.filter(binary_sequence_has_attack)
+    if shuffle:
+        sequence_dataset = sequence_dataset.shuffle(shuffle_buffer)
+    if batch:
+        sequence_dataset = sequence_dataset.batch(batch_size)
+    sequence_dataset = sequence_dataset.prefetch(tf.data.AUTOTUNE)
+
+    return sequence_dataset
+
+def create_multiclass_sequential_dataset(
+        tfrecords_files : list[str],
+        seq_length : int = 64,
+        seq_shift : int = 59,
+        batch : bool = True,
+        batch_size : int = 32,
+        filter_out_normal : bool = True,
+        shuffle : bool = True,
+        shuffle_buffer : int = 512,
         ) -> tf.data.Dataset :
 
     raw_dataset = tf.data.TFRecordDataset(tfrecords_files, num_parallel_reads=tf.data.AUTOTUNE)
@@ -197,6 +243,21 @@ def create_binary_dataset(
 
     return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
+def create_binary_dataset_nonohe(
+        tfrecords_files : list[int],
+        batch_size : int = 50,
+        shuffle : bool = True,
+        shuffle_buffer : int = 10000
+        ) -> tf.data.Dataset:
+
+    raw_ds = tf.data.TFRecordDataset(tfrecords_files)
+    ds = raw_ds.map(parse_binary_record_nonohe)
+    if shuffle:
+        ds = ds.shuffle(shuffle_buffer)
+
+    return ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+
 def create_multiclass_dataset(
         tfrecords_files : list[int],
         batch_size : int = 50,
@@ -224,7 +285,6 @@ def step_training(
     ):
     test_ds = dataset_callback(test_files)
     n_files = n_initial_files
-
     current_train_files = []
     histories = []
     per_attack_files = [[f for f in train_files if attack in f] for attack in awid3_attacks]
@@ -236,8 +296,7 @@ def step_training(
 
     while len(current_train_files) < len(train_files):
         current_train_files = train_files[:min(len(train_files), n_files)]
-        #random.shuffle(current_train_files)
-        current_train_files.sort()
+        random.shuffle(current_train_files)
         for file in current_train_files:
             print(file.split('/')[-1].split('.')[0], end=',')
         print()
@@ -267,3 +326,6 @@ def per_attack_test(model, dataset_callback, train_ratio=0.8, tfrecords_dir='dat
         print()
         ds = dataset_callback(test_set)
         model.evaluate(ds)
+        
+    full_ds = dataset_callback(list(os.path.join(tfrecords_dir, f) for f in all_test_files))
+    model.evaluate(full_ds)

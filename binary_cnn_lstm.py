@@ -7,7 +7,7 @@ from keras.regularizers import L2
 import random
 
 
-model_path = 'saved_models/binary_cnn_lstm.keras'
+model_path = 'saved_models/binary_cnn_lstm1.keras'
 
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
@@ -24,12 +24,15 @@ def binary_CNN_LSTM_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(64, 1, activation='relu', padding='same'),
-        Conv1D(48, 1, activation='relu', padding='same'),
+        Conv1D(32, 3, activation='relu', padding='same'),
+        BatchNormalization(),
+        Dropout(0.2),
         LSTM(32, activation='tanh', return_sequences=True),
+        Dropout(0.2),
         TimeDistributed(
             Dense(16, activation='relu'),
             name='td_dense'),
+        Dropout(0.2),
         TimeDistributed(
             Dense(1, activation='sigmoid'),
             name='td_output'),
@@ -37,11 +40,11 @@ def binary_CNN_LSTM_model():
         
         
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -3,
+            learning_rate = 10 ** -4,
         )
 
         loss = tf.keras.losses.BinaryFocalCrossentropy(
-            gamma = 2
+            gamma = 2,
         )
 
         model.compile(optimizer=optimizer,
@@ -57,24 +60,25 @@ def main():
     tfrecords_dir='dataset/AWID3_tfrecords'
     balanced_tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
+    val_ratio = 0.75
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
     model = binary_CNN_LSTM_model()
-    dataset_lambda = data_utils.create_binary_sequential_dataset
+    dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, filter_out_normal=False, seq_length=1024, seq_shift=997, batch_size=8)
 
     if model.built:
-        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False)
+        dataset_lambda = lambda x : data_utils.create_binary_sequential_dataset(x, shuffle=False, filter_out_normal=False, seq_length=512, seq_shift=512)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 5
+        epochs = 3
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files1, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files1, train_ratio)
+        train_files, validation_files = data_utils.train_test_split(train_files1, val_ratio)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         validation_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
         
-        train_files1, validation_files1 = data_utils.train_test_split(train_files1, train_ratio, repeat_rare=True)
+        train_files1, validation_files1 = data_utils.train_test_split(train_files1, val_ratio, repeat_rare=True)
         balanced_validation_files = [os.path.join(balanced_tfrecords_dir, f) for f in validation_files1]
         balanced_train_files = [os.path.join(balanced_tfrecords_dir, f) for f in train_files1]
         balanced_train_ds = dataset_lambda(balanced_train_files)
@@ -94,14 +98,14 @@ def main():
             model, 
             dataset_lambda, 
             training_callbacks=[checkpoint_callback],
-            epochs_per_step=2,
+            epochs_per_step=4,
             n_initial_files=7,
-            val_freq=2,
-            increment=0.2,
+            val_freq=1,
+            increment=0.15,
             )
         model.summary()
         print(histories)
-        data_utils.per_attack_test(model, test_files, dataset_lambda)
+        data_utils.per_attack_test(model, dataset_lambda)
 
 if __name__ == '__main__':
     main()

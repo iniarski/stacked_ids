@@ -23,18 +23,18 @@ def multiclass_time_domain_CNN_model():
         return model
     else:
         model = tf.keras.models.Sequential([
-        Conv1D(32, 3, activation='relu', padding='same'),
+        Conv1D(32, 1, activation='relu', padding='same', kernel_regularizer='l2', bias_regularizer='l2'),
         BatchNormalization(),
         Dropout(0.2),
-        Conv1D(16, 5, activation='relu', padding='same'),
+        Conv1D(24, 3, activation='relu', padding='same', kernel_regularizer='l2', bias_regularizer='l2'),
         BatchNormalization(),
         Dropout(0.2),
-        Conv1D(8, 7, activation='relu', padding='same'),
+        Conv1D(16, 5, activation='relu', padding='same', kernel_regularizer='l2', bias_regularizer='l2'),
         BatchNormalization(),
         Dropout(0.2),
-        TimeDistributed(Dense(4, activation='relu'), name='td_dense'),
+        TimeDistributed(Dense(8, activation='relu', kernel_regularizer='l2', bias_regularizer='l2'), name='td_dense'),
         Dropout(0.2),
-        TimeDistributed(Dense(3, activation='softmax')),
+        TimeDistributed(Dense(3, activation='softmax', kernel_regularizer='l2', bias_regularizer='l2'), name='td_output')
       ])
 
         loss = tf.keras.losses.CategoricalFocalCrossentropy(
@@ -70,7 +70,7 @@ def main():
         dataset_lambda = lambda x : data_utils.create_multiclass_sequential_dataset(x, shuffle=False, filter_out_normal=False)
         data_utils.per_attack_test(model, dataset_lambda)
     else :
-        epochs = 6
+        epochs = 10
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files1, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
         train_files, validation_files = data_utils.train_test_split(train_files1, train_ratio)
@@ -85,7 +85,8 @@ def main():
         model.fit(
             balanced_train_ds,
             validation_data = balanced_val_ds,
-            epochs=epochs
+            epochs=epochs,
+            validation_freq=epochs
         )
 
         histories = data_utils.step_training(
@@ -97,7 +98,7 @@ def main():
             epochs_per_step=2,
             n_initial_files=10,
             val_freq=2,
-            increment=0.2,
+            increment=0.1,
             )
         model.summary()
         print(histories)

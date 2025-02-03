@@ -56,5 +56,3 @@ def process_file(file):
 with ProcessPoolExecutor() as executor:
    executor.map(process_file, os.listdir(csv_dir))
 
-for file in os.listdir(csv_dir):
-    process_file(file)

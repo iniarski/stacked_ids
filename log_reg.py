@@ -10,12 +10,12 @@ model_path = 'saved_models/log_reg.keras'
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=model_path,
     save_best_only=True,
-    monitor='f1_score',
+    monitor='val_accuracy',
     mode='max',
     verbose=1
 )
 
-def LogReg_model(n_features = 39):
+def LogReg_model():
     if os.path.exists(model_path):
         model = tf.keras.models.load_model(model_path)
         print(f"Model loaded from {model_path}")
@@ -26,7 +26,7 @@ def LogReg_model(n_features = 39):
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 10 ** -4,   
+            learning_rate = 10 ** -3,
         )
 
         model.compile(optimizer=optimizer,
@@ -38,36 +38,39 @@ def LogReg_model(n_features = 39):
 
 def main():
     import data_utils
-    random.seed(42)
 
     tfrecords_dir='dataset/AWID3_tfrecords_balanced'
-
-    train_ratio = 0.99
+    train_ratio = 0.8
+    val_ratio = 0.75
     tfrecords_files = os.listdir(tfrecords_dir)
-    test_files, train_files = data_utils.train_test_split(tfrecords_files, train_ratio)
-    epochs = 15
-
-    train_set = [os.path.join(tfrecords_dir, file) for file in train_files]
-    test_set = [os.path.join(tfrecords_dir, file) for file in test_files]
-
-    batch_size = 50
-
-    raw_train_ds = tf.data.TFRecordDataset(train_set)
-    train_ds = raw_train_ds.map(data_utils.parse_record).shuffle(100000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
-    raw_test_ds = tf.data.TFRecordDataset(test_set)
-    test_ds = raw_train_ds.map(data_utils.parse_record).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-    
-
+    train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
     model = LogReg_model()
-    model.fit(train_ds,
-              epochs=epochs,
-              callbacks = [checkpoint_callback],)
+    dataset_lambda = lambda x : data_utils.create_binary_dataset(x)
 
-    model.summary()
+    if model.built:
+        data_utils.per_attack_test(model, dataset_lambda)
+        
+    else :
+        epochs = 10
+        tfrecords_files = os.listdir(tfrecords_dir)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, val_files = data_utils.train_test_split(train_files, val_ratio, repeat_rare=False)
+        train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
+        val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
+        train_ds = dataset_lambda(train_files)
+        val_ds = dataset_lambda(val_files)
 
-    model.evaluate(test_ds)
+        history = model.fit(
+            train_ds,
+            validation_data = val_ds,
+            epochs = epochs,
+            callbacks = [checkpoint_callback]
+        )
+
+        model.summary()
+        print(history.history)
+        data_utils.per_attack_test(model, dataset_lambda)
 
 if __name__ == '__main__':
     main()

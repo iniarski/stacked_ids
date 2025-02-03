@@ -21,13 +21,16 @@ def multiclass_DNN_model(n_features = 39):
         print(f"Model loaded from {model_path}")
         return model
     else:
-        model = tf.keras.models.Sequential([
+        model = tf.keras.models.Sequential([        
+        Dense(48, activation='relu', kernel_regularizer=L2(0.02)),
+        BatchNormalization(),
+        Dropout(0.2),
         Dense(32, activation='relu', kernel_regularizer=L2(0.02), bias_regularizer=L2(0.02)),
         BatchNormalization(),
-        Dropout(0.4),
+        Dropout(0.2),
         Dense(16, activation='relu', kernel_regularizer=L2(0.02), bias_regularizer=L2(0.02)),
         BatchNormalization(),
-        Dropout(0.4),
+        Dropout(0.2),
         Dense(3, activation='softmax', kernel_regularizer=L2(0.02), bias_regularizer=L2(0.02)),
       ])
 
@@ -48,6 +51,7 @@ def main():
 
     tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
+    val_ratio = 0.75
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
@@ -60,9 +64,9 @@ def main():
         epochs = 20
         tfrecords_files = os.listdir(tfrecords_dir)
         train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
-        train_files, validation_files = data_utils.train_test_split(train_files, train_ratio, repeat_rare=True)
+        train_files, val_files = data_utils.train_test_split(train_files, val_ratio, repeat_rare=False)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
-        val_files = [os.path.join(tfrecords_dir, f) for f in validation_files]
+        val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
         train_ds = dataset_lambda(train_files)
         val_ds = dataset_lambda(val_files)
         

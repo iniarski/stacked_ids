@@ -22,6 +22,9 @@ def binary_DNN_model():
         return model
     else:
         model = tf.keras.models.Sequential([
+        Dense(48, activation='relu', kernel_regularizer=L2(0.02)),
+        BatchNormalization(),
+        Dropout(0.2),
         Dense(32, activation='relu', kernel_regularizer=L2(0.02)),
         BatchNormalization(),
         Dropout(0.2),
@@ -32,7 +35,7 @@ def binary_DNN_model():
       ])
 
         optimizer = tf.keras.optimizers.Adam(
-            learning_rate = 0.001,   
+            learning_rate = 10 ** -5,   
         )
 
         model.compile(optimizer=optimizer,
@@ -47,6 +50,7 @@ def main():
 
     tfrecords_dir='dataset/AWID3_tfrecords_balanced'
     train_ratio = 0.8
+    val_ratio = 0.75
     tfrecords_files = os.listdir(tfrecords_dir)
     train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
 
@@ -55,10 +59,12 @@ def main():
 
     if model.built:
         data_utils.per_attack_test(model, dataset_lambda)
+        
     else :
         epochs = 20
         tfrecords_files = os.listdir(tfrecords_dir)
-        train_files, val_files, = data_utils.train_test_split(tfrecords_files, train_ratio, repeat_rare=True)
+        train_files, test_files, = data_utils.train_test_split(tfrecords_files, train_ratio)
+        train_files, val_files = data_utils.train_test_split(train_files, val_ratio, repeat_rare=False)
         train_files = [os.path.join(tfrecords_dir, f) for f in train_files]
         val_files = [os.path.join(tfrecords_dir, f) for f in val_files]
         train_ds = dataset_lambda(train_files)
